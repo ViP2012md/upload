@@ -1,3 +1,9 @@
+Page alarm
+    Attributes
+        ID                 : 0
+        Scope              : local
+        Dragging           : 0
+        Send Component ID  : on press and release
         Locked             : no
         Swide up page ID   : disabled
         Swide down page ID : disabled
