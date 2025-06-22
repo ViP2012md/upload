@@ -1,0 +1,14 @@
+"require"in window&&require("discourse/lib/theme-settings-store").registerSettings(24,{Custom_header_links2:"Integrations,Integrations,https://www.home-assistant.io/components/,vdo,blank,remove,true,|Docs,Docs,https://www.home-assistant.io/docs/,vdo,blank,remove,true,|Blog,Blog,https://www.home-assistant.io/blog/,vdo,blank,remove,true,|Dev Docs,Developer Docs,https://developers.home-assistant.io,vdo,blank,remove,true,|Need Help?,Need Help?,https://www.home-assistant.io/help/,vdo,blank,remove,true,"}),"define"in window&&define("discourse/theme-24/discourse/initializers/theme-field-78-common-html-script-1",["exports","discourse/lib/plugin-api"],(function(e,t){"use strict"
+Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0
+const i=require("discourse/lib/theme-settings-store").getObjectForTheme(24)
+e.default={name:"theme-field-78-common-html-script-1",after:"inject-objects",initialize(){(0,t.withPluginApi)("0.8.20",(e=>{$("html").attr("dhp-locale",I18n.locale)
+const t=i.Custom_header_links2
+if(!t.length)return
+const s=require("virtual-dom").h,r=[],o=e.container.lookup("site:main").mobileView,l=[]
+if(t.split("|").map((e=>{const t=$.map(e.split(","),$.trim),i=t[0],n=t[1],a=t[2],m=`.${t[3]}`,h="self"===t[4]?"":"_blank",d="keep"===t[5]?".keep":"",u=`.${i.trim().toLowerCase().replace(/\s/gi,"-")}`,c="true"===t[6],p=t[7]?`.${t[7].split(" ").join(".")})`:""
+c&&("vdo"===t[3]&&o||"vmo"===t[3]&&!o)&&l.push({linkText:i,linkTitle:n,linkHref:a,linkTarget:h,liClassName:t[7]}),h?r.push(s(`li.headerLink${m}${d}${u}${p}`,s("a",{title:n,href:a,target:h},i))):r.push(s(`li.headerLink${m}${d}${u}${p}`,s("a",{title:n,href:a},i)))})),e.decorateWidget("header-buttons:before",(e=>e.h("ul.custom-header-links",r))),e.decorateWidget("home-logo:after",(e=>{e.attrs.minimized?$(".d-header").addClass("hide-menus"):$(".d-header").removeClass("hide-menus")})),e.reopenWidget("menu-links",{html(e){let t=this._super(e)
+return e.liClassNames&&t[0].children.forEach(((t,i)=>{t.properties=Object.assign({},t.properties,{className:e.liClassNames[i%e.liClassNames.length]})})),t}}),l.length){const{h:t}=require("virtual-dom")
+e.reopenWidget("hamburger-menu",{panelContents(){const e=this._super(),i=l.map((e=>t("a",{href:e.linkHref,title:e.linkTitle,target:e.linkTarget,className:"widget-link"},e.linkText))),s=this.attach("menu-links",{name:"custom-header-links",liClassNames:l.map((e=>`headerLink ${e.liClassName||""}`)),contents:()=>i})
+return e.unshift(s),e}})}}))}}}))
+
+//# sourceMappingURL=3e3c63008b528fd5ee18641e09698a740bd3790e.map?__ws=community.home-assistant.io

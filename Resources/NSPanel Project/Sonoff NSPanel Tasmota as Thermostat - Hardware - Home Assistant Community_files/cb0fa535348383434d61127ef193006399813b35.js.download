@@ -1,0 +1,4 @@
+Discourse.ExternalNavItem=Discourse.NavItem.extend({href:function(){return this.get("href")}.property("href")}),I18n.translations.en.js.filters.features={title:"Feature Requests",help:"Open Feature Requests"},Discourse.NavItem.reopenClass({buildList:function(e,t){var r=this._super(e,t)
+return e||r.push(Discourse.ExternalNavItem.create({href:"/c/feature-requests?order=votes",name:"features"})),r}})
+
+//# sourceMappingURL=cb0fa535348383434d61127ef193006399813b35.map?__ws=community.home-assistant.io

@@ -1,0 +1,12 @@
+"require"in window&&require("discourse/lib/theme-settings-store").registerSettings(23,{Hamburger_links:"Discord,https://discord.gg/c5DvZ4e,f|GitHub,https://github.com/home-assistant,f|Twitter,https://twitter.com/home_assistant,f|Facebook,https://facebook.com/homeassistantio,f|Reddit,https://www.reddit.com/r/homeassistant/,f"}),"define"in window&&define("discourse/theme-23/discourse/api-initializers/init-custom-hamburger-links",["exports","discourse/lib/api"],(function(t,e){"use strict"
+function i(t,e,i){var r
+return(e="symbol"==typeof(r=function(t,e){if("object"!=typeof t||!t)return t
+var i=t[Symbol.toPrimitive]
+if(void 0!==i){var r=i.call(t,e||"default")
+if("object"!=typeof r)return r
+throw new TypeError("@@toPrimitive must return a primitive value.")}return("string"===e?String:Number)(t)}(e,"string"))?r:String(r))in t?Object.defineProperty(t,e,{value:i,enumerable:!0,configurable:!0,writable:!0}):t[e]=i,t}Object.defineProperty(t,"__esModule",{value:!0}),t.default=void 0
+const r=require("discourse/lib/theme-settings-store").getObjectForTheme(23)
+t.default=(0,e.apiInitializer)("0.8.18",(t=>{(r.Hamburger_links||"").split("|").forEach(((e,r)=>{let[s,o]=(e||"").split(",")
+t.addCommunitySectionLink((t=>class extends t{constructor(){super(...arguments),i(this,"name",`custom-link-${r+1}`),i(this,"href",o),i(this,"route",""),i(this,"text",s),i(this,"title",s)}}),!1)}))}))}))
+
+//# sourceMappingURL=bfe0d94ea5403af9790d51a0c90284b1df1069ae.map?__ws=community.home-assistant.io

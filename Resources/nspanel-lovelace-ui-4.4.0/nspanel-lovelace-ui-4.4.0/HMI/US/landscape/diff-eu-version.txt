@@ -1,0 +1,545 @@
+--- HMI/n2t-out
++++ HMI/US/landscape/n2t-out
+│   --- HMI/n2t-out/Program.s.txt
+├── +++ HMI/US/landscape/n2t-out/Program.s.txt
+│ @@ -13,10 +13,10 @@
+│      int dimValueNormal=100
+│      //color vars
+│      int defaultFontColor=65535
+│      int defaultBcoColor=6371
+│      //feature flags
+│      int featNewSliders=0
+│      // fix touch offset
+│ -    lcd_dev fffb 0002 0000 0020
+│ +    //lcd_dev fffb 0002 0000 0020
+│      printh 00 00 00 ff ff ff 88 ff ff ff//Output power on information to serial port
+│      page pageStartup
+│   --- HMI/n2t-out/cardEntities.txt
+├── +++ HMI/US/landscape/n2t-out/cardEntities.txt
+│ @@ -20,15 +20,14 @@
+│              crcputs tSend.txt,0
+│              //send cmd
+│              printh 55 bb
+│              prints sys0,2
+│              prints tSend.txt,0
+│              prints crcval,2
+│              dim=dimValueNormal
+│ -            dim=dimValueNormal
+│              //wup=cardEntities
+│              //remove background & activate reparse mode
+│              vis p0,0
+│              recmod=1
+│              baud=115200
+│              //debug stuff
+│              vis tTmp,0
+│   --- HMI/n2t-out/cardThermo.txt
+├── +++ HMI/US/landscape/n2t-out/cardThermo.txt
+│ @@ -28,14 +28,19 @@
+│              vis tSend,0
+│              vis tInstruction,0
+│              vis tTmp,0
+│              vis tId,0
+│              vis xTempMin1,0
+│              vis xTempMax1,0
+│              vis xTempStep1,0
+│ +            vis xTempDest,0
+│ +            vis btUp,0
+│ +            vis btDown,0
+│ +            vis tCF,0
+│ +            vis btDetail,0
+│              //tEntity.txt=tHeading.txt
+│              // disable all buttons
+│              vis bt0,0
+│              vis bt1,0
+│              vis bt2,0
+│              vis bt3,0
+│              vis bt4,0
+│ @@ -1014,14 +1019,28 @@
+│                                              vis xTempDest1,1
+│                                              vis btDown1,1
+│                                              vis tCF1,1
+│                                              vis bUp2,1
+│                                              vis xTempDest2,1
+│                                              vis bDown2,1
+│                                              vis tCF2,1
+│ +                                        }else
+│ +                                        {
+│ +                                            vis btUp,1
+│ +                                            vis xTempDest,1
+│ +                                            vis btDown,1
+│ +                                            vis tCF,1
+│ +                                            vis btUp1,0
+│ +                                            vis xTempDest1,0
+│ +                                            vis btDown1,0
+│ +                                            vis tCF1,0
+│ +                                            vis bUp2,0
+│ +                                            vis xTempDest2,0
+│ +                                            vis bDown2,0
+│ +                                            vis tCF2,0
+│                                          }
+│                                          //Show btDetail
+│                                          spstr strCommand.txt,tTmp.txt,"~",58
+│                                          if(tTmp.txt!="1")
+│                                          {
+│                                              vis btDetail,1
+│                                          }else
+│   --- HMI/n2t-out/pageStartup.txt
+├── +++ HMI/US/landscape/n2t-out/pageStartup.txt
+│ @@ -164,15 +164,15 @@
+│          Max. Text Size   : 10
+│      
+│      Events
+│          Touch Press Event
+│              recmod=1
+│              bauds=115200
+│              // startup event
+│ -            tSend.txt="event,startup,"+tVersion.txt+",eu"
+│ +            tSend.txt="event,startup,"+tVersion.txt+",us-l"
+│              //send calc crc
+│              btlen tSend.txt,sys0
+│              crcrest 1,0xffff // reset CRC
+│              crcputh 55 bb
+│              crcputs sys0,2
+│              crcputs tSend.txt,0
+│              //send cmd
+│   --- HMI/n2t-out/popupLight.txt
+├── +++ HMI/US/landscape/n2t-out/popupLight.txt
+│ @@ -453,19 +453,14 @@
+│                                      ucopy strCommand.txt,4,payloadLength-5,0
+│                                      // write instruction to tInstuction (debug output, but used as variable here, ui elements will be disabled by default)
+│                                      spstr strCommand.txt,tInstruction.txt,"~",0
+│                                      spstr strCommand.txt,tTmp.txt,"~",1
+│                                      if(tInstruction.txt=="entityUpdateDetail"&&entn.txt==tTmp.txt)
+│                                      {
+│                                          // change icon
+│ -                                        spstr strCommand.txt,tTmp.txt,"~",2
+│ -                                        if(tTmp.txt!="")
+│ -                                        {
+│ -                                            tIcon1.txt=tTmp.txt
+│ -                                        }
+│                                          //spstr strCommand.txt,tIcon1.txt,"~",2
+│                                          vis tIcon1,1
+│                                          // change icon color
+│                                          spstr strCommand.txt,tTmp.txt,"~",3
+│                                          covx tTmp.txt,sys0,0,0
+│                                          tIcon1.pco=sys0
+│                                          // get Button State
+│   --- HMI/n2t-out/popupNotify.txt
+├── +++ HMI/US/landscape/n2t-out/popupNotify.txt
+│ @@ -439,18 +439,14 @@
+│                                          {
+│                                              page cardPower
+│                                          }
+│                                          if(tId.txt=="cardChart")
+│                                          {
+│                                              page cardChart
+│                                          }
+│ -                                        if(tId.txt=="cardLChart")
+│ -                                        {
+│ -                                            page cardLChart
+│ -                                        }
+│                                      }
+│                                      // end of user code
+│                                      udelete payloadLength-1
+│                                      bufferPos=0
+│                                  }
+│                              }
+│                          }
+│   --- HMI/n2t-out/screensaver.txt
+├── +++ HMI/US/landscape/n2t-out/screensaver.txt
+│ @@ -19,15 +19,14 @@
+│              crcputs sys0,2
+│              crcputs tSend.txt,0
+│              //send cmd
+│              printh 55 bb
+│              prints sys0,2
+│              prints tSend.txt,0
+│              prints crcval,2
+│ -            dim=dimValueNormal
+│              recmod=1
+│              baud=115200
+│              vis tInstruction,0
+│              vis tTmp,0
+│              vis p0,0
+│              vis tNotifyHead,0
+│              vis tNotifyText,0
+│ @@ -41,17 +40,14 @@
+│              }
+│              tDate.txt=pageIcons.vaDate.txt
+│              dim=dimValue
+│              vis tSend,0
+│              //page open event
+│              // clear weather elements, to keep example content in HMI
+│          
+│ -        Postinitialize Event
+│ -            click m0,1
+│ -        
+│  Variable (string) strCommand
+│      Attributes
+│          Scope         : local
+│          Text          : 
+│          Max. Text Size: 600
+│      
+│  Variable (string) strTmp
+│ @@ -115,34 +111,14 @@
+│          Value: 0
+│      
+│  Variable (int32) ycR
+│      Attributes
+│          Scope: local
+│          Value: 0
+│      
+│ -Text m0
+│ -    Attributes
+│ -        Scope              : local
+│ -        Dragging           : 0
+│ -        Send Component ID  : disabled
+│ -        Associated Keyboard: none
+│ -        Text               : 
+│ -        Max. Text Size     : 10
+│ -    
+│ -    Events
+│ -        Touch Press Event
+│ -            tTmp.txt="change model conf to us-l/p "
+│ -            strlen tTmp.txt,sys1
+│ -            sya1=sys1*11+m0.h-48/2
+│ -            for(sys0=0;sys0<sys1;sys0++)
+│ -            {
+│ -                substr tTmp.txt,strTmp.txt,sys0,1
+│ -                xstr m0.x-5,sys0*-11+m0.y+sya1,23,20,6,WHITE,RED,2,1,3,strTmp.txt
+│ -            }
+│ -        
+│  Text t10
+│      Attributes
+│          Scope              : local
+│          Dragging           : 0
+│          Send Component ID  : disabled
+│          Associated Keyboard: none
+│          Text               : |
+│ @@ -485,17 +461,14 @@
+│                                          //get set time to global variable
+│                                          spstr strCommand.txt,pageIcons.vaTime.txt,"~",1
+│                                          spstr pageIcons.vaTime.txt,tTime.txt,"?",0
+│                                          spstr pageIcons.vaTime.txt,tAMPM.txt,"?",1
+│                                          if(tAMPM.txt=="")
+│                                          {
+│                                              vis tAMPM,0
+│ -                                        }else
+│ -                                        {
+│ -                                            vis tAMPM,1
+│                                          }
+│                                          spstr strCommand.txt,tTimeAdd.txt,"~",2
+│                                          ref tIcon1
+│                                          ref tIcon2
+│                                      }
+│                                      if(tInstruction.txt=="date")
+│                                      {
+│   --- HMI/n2t-out/screensaver2.txt
+├── +++ HMI/US/landscape/n2t-out/screensaver2.txt
+│ @@ -19,15 +19,14 @@
+│              crcputs sys0,2
+│              crcputs tSend.txt,0
+│              //send cmd
+│              printh 55 bb
+│              prints sys0,2
+│              prints tSend.txt,0
+│              prints crcval,2
+│ -            dim=dimValueNormal
+│              recmod=1
+│              baud=115200
+│              vis tInstruction,0
+│              vis tTmp,0
+│              vis p0,0
+│              vis tNotifyHead,0
+│              vis tNotifyText,0
+│ @@ -41,52 +40,19 @@
+│              }
+│              tDate.txt=pageIcons.vaDate.txt
+│              dim=dimValue
+│              vis tSend,0
+│              //page open event
+│              // clear weather elements, to keep example content in HMI
+│          
+│ -        Postinitialize Event
+│ -            click m0,1
+│ -        
+│ -Variable (string) entn1
+│ -    Attributes
+│ -        Scope         : local
+│ -        Text          : 
+│ -        Max. Text Size: 14
+│ -    
+│ -Variable (string) entn2
+│ -    Attributes
+│ -        Scope         : local
+│ -        Text          : 
+│ -        Max. Text Size: 14
+│ -    
+│ -Variable (string) entn3
+│ -    Attributes
+│ -        Scope         : local
+│ -        Text          : 
+│ -        Max. Text Size: 14
+│ -    
+│ -Variable (string) entn4
+│ -    Attributes
+│ -        Scope         : local
+│ -        Text          : 
+│ -        Max. Text Size: 14
+│ -    
+│ -Variable (string) entn5
+│ -    Attributes
+│ -        Scope         : local
+│ -        Text          : 
+│ -        Max. Text Size: 14
+│ -    
+│  Variable (string) strCommand
+│      Attributes
+│          Scope         : local
+│          Text          : 
+│ -        Max. Text Size: 1935
+│ +        Max. Text Size: 1979
+│      
+│  Variable (string) strTmp
+│      Attributes
+│          Scope         : local
+│          Text          : 
+│          Max. Text Size: 2
+│      
+│ @@ -96,27 +62,27 @@
+│          Text          : 
+│          Max. Text Size: 25
+│      
+│  Variable (string) tInstruction
+│      Attributes
+│          Scope         : local
+│          Text          : 
+│ -        Max. Text Size: 15
+│ +        Max. Text Size: 50
+│      
+│  Variable (string) tSend
+│      Attributes
+│          Scope         : local
+│          Text          : 
+│          Max. Text Size: 50
+│      
+│  Variable (string) tTmp
+│      Attributes
+│          Scope         : local
+│          Text          : 
+│ -        Max. Text Size: 30
+│ +        Max. Text Size: 50
+│      
+│  Variable (int32) vaTap
+│      Attributes
+│          Scope: local
+│          Value: 0
+│      
+│  Variable (int32) xc1
+│ @@ -370,145 +336,50 @@
+│          Scope              : local
+│          Dragging           : 0
+│          Send Component ID  : disabled
+│          Associated Keyboard: none
+│          Text               : 
+│          Max. Text Size     : 4
+│      
+│ -    Events
+│ -        Touch Press Event
+│ -            tSend.txt="event,buttonPress2,"+entn1.txt+",button"
+│ -            //send calc crc
+│ -            btlen tSend.txt,sys0
+│ -            crcrest 1,0xffff // reset CRC
+│ -            crcputh 55 bb
+│ -            crcputs sys0,2
+│ -            crcputs tSend.txt,0
+│ -            //send cmd
+│ -            printh 55 bb
+│ -            prints sys0,2
+│ -            prints tSend.txt,0
+│ -            prints crcval,2
+│ -        
+│  Text f2Icon
+│      Attributes
+│          Scope              : local
+│          Dragging           : 0
+│          Send Component ID  : disabled
+│          Associated Keyboard: none
+│          Text               : 
+│          Max. Text Size     : 4
+│      
+│ -    Events
+│ -        Touch Press Event
+│ -            tSend.txt="event,buttonPress2,"+entn2.txt+",button"
+│ -            //send calc crc
+│ -            btlen tSend.txt,sys0
+│ -            crcrest 1,0xffff // reset CRC
+│ -            crcputh 55 bb
+│ -            crcputs sys0,2
+│ -            crcputs tSend.txt,0
+│ -            //send cmd
+│ -            printh 55 bb
+│ -            prints sys0,2
+│ -            prints tSend.txt,0
+│ -            prints crcval,2
+│ -        
+│  Text f3Icon
+│      Attributes
+│          Scope              : local
+│          Dragging           : 0
+│          Send Component ID  : disabled
+│          Associated Keyboard: none
+│          Text               : 
+│          Max. Text Size     : 4
+│      
+│ -    Events
+│ -        Touch Press Event
+│ -            tSend.txt="event,buttonPress2,"+entn3.txt+",button"
+│ -            //send calc crc
+│ -            btlen tSend.txt,sys0
+│ -            crcrest 1,0xffff // reset CRC
+│ -            crcputh 55 bb
+│ -            crcputs sys0,2
+│ -            crcputs tSend.txt,0
+│ -            //send cmd
+│ -            printh 55 bb
+│ -            prints sys0,2
+│ -            prints tSend.txt,0
+│ -            prints crcval,2
+│ -        
+│  Text f4Icon
+│      Attributes
+│          Scope              : local
+│          Dragging           : 0
+│          Send Component ID  : disabled
+│          Associated Keyboard: none
+│          Text               : 
+│          Max. Text Size     : 4
+│      
+│ -    Events
+│ -        Touch Press Event
+│ -            tSend.txt="event,buttonPress2,"+entn4.txt+",button"
+│ -            //send calc crc
+│ -            btlen tSend.txt,sys0
+│ -            crcrest 1,0xffff // reset CRC
+│ -            crcputh 55 bb
+│ -            crcputs sys0,2
+│ -            crcputs tSend.txt,0
+│ -            //send cmd
+│ -            printh 55 bb
+│ -            prints sys0,2
+│ -            prints tSend.txt,0
+│ -            prints crcval,2
+│ -        
+│  Text f5Icon
+│      Attributes
+│          Scope              : local
+│          Dragging           : 0
+│          Send Component ID  : disabled
+│          Associated Keyboard: none
+│          Text               : 
+│          Max. Text Size     : 4
+│      
+│ -    Events
+│ -        Touch Press Event
+│ -            tSend.txt="event,buttonPress2,"+entn5.txt+",button"
+│ -            //send calc crc
+│ -            btlen tSend.txt,sys0
+│ -            crcrest 1,0xffff // reset CRC
+│ -            crcputh 55 bb
+│ -            crcputs sys0,2
+│ -            crcputs tSend.txt,0
+│ -            //send cmd
+│ -            printh 55 bb
+│ -            prints sys0,2
+│ -            prints tSend.txt,0
+│ -            prints crcval,2
+│ -        
+│ -Text m0
+│ -    Attributes
+│ -        Scope              : local
+│ -        Dragging           : 0
+│ -        Send Component ID  : disabled
+│ -        Associated Keyboard: none
+│ -        Text               : 
+│ -        Max. Text Size     : 10
+│ -    
+│ -    Events
+│ -        Touch Press Event
+│ -            tTmp.txt="change model conf to us-l/p "
+│ -            strlen tTmp.txt,sys1
+│ -            sya1=sys1*11+m0.h-48/2
+│ -            for(sys0=0;sys0<sys1;sys0++)
+│ -            {
+│ -                substr tTmp.txt,strTmp.txt,sys0,1
+│ -                xstr m0.x-5,sys0*-11+m0.y+sya1,23,20,6,WHITE,RED,2,1,3,strTmp.txt
+│ -            }
+│ -        
+│  Text tAMPM
+│      Attributes
+│          Scope              : local
+│          Dragging           : 0
+│          Send Component ID  : disabled
+│          Associated Keyboard: none
+│          Text               : PM
+│ @@ -690,15 +561,14 @@
+│                                          if(tTmp.txt!="")
+│                                          {
+│                                              covx tTmp.txt,defaultFontColor,0,0
+│                                          }
+│                                      }
+│                                      if(tInstruction.txt=="time")
+│                                      {
+│ -                                        click m0,1
+│                                          //get set time to global variable
+│                                          spstr strCommand.txt,pageIcons.vaTime.txt,"~",1
+│                                          spstr pageIcons.vaTime.txt,tTime.txt,"?",0
+│                                          spstr pageIcons.vaTime.txt,tAMPM.txt,"?",1
+│                                          if(tAMPM.txt=="")
+│                                          {
+│                                              vis tAMPM,0
+│ @@ -819,44 +689,34 @@
+│                                          //e6Val
+│                                          spstr strCommand.txt,e6Val.txt,"~",60
+│                                          //f1Icon
+│                                          spstr strCommand.txt,f1Icon.txt,"~",63
+│                                          //f1Icon Color
+│                                          spstr strCommand.txt,tTmp.txt,"~",64
+│                                          covx tTmp.txt,f1Icon.pco,0,0
+│ -                                        //f1Icon intNameEntity
+│ -                                        spstr strCommand.txt,entn1.txt,"~",62
+│                                          //f2Icon
+│                                          spstr strCommand.txt,f2Icon.txt,"~",69
+│                                          //f2Icon Color
+│                                          spstr strCommand.txt,tTmp.txt,"~",70
+│                                          covx tTmp.txt,f2Icon.pco,0,0
+│ -                                        //f2Icon intNameEntity
+│ -                                        spstr strCommand.txt,entn2.txt,"~",68
+│                                          //f3Icon
+│                                          spstr strCommand.txt,f3Icon.txt,"~",75
+│                                          //f3Icon Color
+│                                          spstr strCommand.txt,tTmp.txt,"~",76
+│                                          covx tTmp.txt,f3Icon.pco,0,0
+│ -                                        //f3Icon intNameEntity
+│ -                                        spstr strCommand.txt,entn3.txt,"~",74
+│                                          //f4Icon
+│                                          spstr strCommand.txt,f4Icon.txt,"~",81
+│                                          //f4Icon Color
+│                                          spstr strCommand.txt,tTmp.txt,"~",82
+│                                          covx tTmp.txt,f4Icon.pco,0,0
+│ -                                        //f4Icon intNameEntity
+│ -                                        spstr strCommand.txt,entn4.txt,"~",80
+│                                          //f5Icon
+│                                          spstr strCommand.txt,f5Icon.txt,"~",87
+│                                          //f5Icon Color
+│                                          spstr strCommand.txt,tTmp.txt,"~",88
+│                                          covx tTmp.txt,f5Icon.pco,0,0
+│ -                                        //f5Icon intNameEntity
+│ -                                        spstr strCommand.txt,entn5.txt,"~",86
+│                                      }
+│                                      if(tInstruction.txt=="notify")
+│                                      {
+│                                          spstr strCommand.txt,tNotifyHead.txt,"~",1
+│                                          spstr strCommand.txt,tNotifyText.txt,"~",2
+│                                          if(tNotifyHead.txt!=""||tNotifyText.txt!="")
+│                                          {

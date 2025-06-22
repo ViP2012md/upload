@@ -1,0 +1,136 @@
+---
+name: Bug Report
+description: If something isn't working as expected, let us know here.
+title: "`Bug` "
+labels: [Bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out a bug report!
+
+        We aim to keep everything working perfectly, so your detailed reports are crucial.
+
+        Report only one specific issue per submission. If you encounter another issue, create a new report for effective tracking and resolution.
+
+        The more detail you provide, the quicker we can help.
+
+        > [!WARNING]
+        > Omit any private or sensitive information, as this bug report will be publicly visible.
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Version Information
+        Provide version numbers for TFT, ESPHome, and Blueprint. These can be found on your device's boot screen and in the automation where the blueprint is set.
+
+  - type: input
+    attributes:
+      label: TFT Version
+      description: Enter the TFT version number.
+      placeholder: e.g., 2024.7.0
+    validations:
+      required: false
+
+  - type: input
+    attributes:
+      label: Firmware Version
+      description: Enter the ESPHome firmware version number.
+      placeholder: e.g., 2024.7.0
+    validations:
+      required: false
+
+  - type: input
+    attributes:
+      label: Blueprint Version
+      description: Enter the Blueprint version number.
+      placeholder: e.g., 2024.7.0
+    validations:
+      required: false
+
+  - type: dropdown
+    attributes:
+      label: Panel Model
+      description: Select your NSPanel model.
+      options:
+        - EU
+        - US
+        - US (Landscape)
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Bug Details
+
+  - type: textarea
+    attributes:
+      label: What is the bug?
+      description: Describe the bug clearly and concisely.
+      placeholder: e.g., When I try this, I get this result, but I expected that...
+
+  - type: textarea
+    attributes:
+      label: Steps to Reproduce
+      description: Detail the steps to reproduce the behavior. Include screenshots or other relevant information.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. See error on '...'
+
+  - type: markdown
+    attributes:
+      value: |
+        ## Additional Information (Optional)
+
+  - type: textarea
+    attributes:
+      label: Your Panel's YAML
+      description: Provide your panel's YAML configuration.
+      render: yaml
+      placeholder: |
+        # Example YAML configuration
+        # ...
+
+  - type: textarea
+    attributes:
+      label: ESPHome Logs
+      description: >
+        Access these logs via the **Logs** button on the ESPHome Dashboard.
+        These logs are crucial for diagnosing issues with your device.
+
+
+        Please follow the guidelines below to ensure the logs are comprehensive:
+
+        - **Boot Issues**: If the problem occurs during boot, capture the logs from the start of your device to a minute or two after the boot completes.
+        Look for errors or unusual messages during this period.
+
+        - **TFT File Update Issues**: For problems related to TFT file updates,
+        include logs from the moment you press the **Update TFT Display** button until a few seconds after the device restarts.
+        Pay attention to any error messages or warnings during the update process.
+
+        - **Other Issues**: For other types of problems, include logs that encompass the issue's onset and continue for a short duration thereafter.
+        This will help in pinpointing the exact moment and nature of the issue.
+
+
+        Remember, the more detailed the logs, the easier it is to identify and resolve the problem.
+
+  - type: textarea
+    attributes:
+      label: Home Assistant Logs
+      description: >
+        To access Home Assistant logs, navigate to **Settings** > **System** > [**Logs**](https://my.home-assistant.io/redirect/logs/).
+
+
+        When reporting an issue, please focus on providing logs specifically relevant to the problem:
+
+        - **NSPanel Blueprint Automation**: If your issue is related to automation using the NSPanel blueprint, include only those logs that directly pertain to this process.
+
+        - **Panel and ESPHome**: For issues involving your panel and ESPHome, carefully select and share logs that show interactions or errors between these components.
+
+        - **Relevancy is Key**: To expedite troubleshooting, avoid including logs that are not related to the issue at hand. This helps in focusing on the pertinent information.
+
+
+        Your attention to sharing targeted and relevant log data is greatly appreciated and aids in efficient problem resolution.
+...

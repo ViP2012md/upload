@@ -1,0 +1,68 @@
+( function( $, context ) {
+
+    $( function() {
+        var op = context.op || ( context.op = {} );
+
+        var importantLogs = {};
+        var debugLogs = {};
+
+        function addEntry( entry, isImportant ) {
+            var bucket = isImportant ? importantLogs : debugLogs;
+            if ( !bucket[ entry.key ] ) {
+                bucket[ entry.key ] = [];
+            }
+            bucket[ entry.key ].push( entry );
+        }
+
+        function flushLogs( isImportant ) {
+            try {
+                var bucket;
+
+                if ( isImportant ) {
+                    bucket = importantLogs;
+                    importantLogs = {};
+                } else {
+                    bucket = debugLogs;
+                    debugLogs = {};
+                }
+
+                if ( $.isEmptyObject( bucket ) ) {
+                    // Nothing to log
+                    return;
+                }
+
+                if ( window.navigator && window.navigator.userAgent ) {
+                    bucket.userAgent = window.navigator.userAgent;
+                }
+
+                $.post( 'https://tracking.ontraport.com/fe_log.php', { payload: JSON.stringify( bucket ) } );
+            } catch ( e ) {
+                console.error( e );
+            }
+        }
+
+        // Flush important stuff every 10s
+        setInterval( function() {
+            flushLogs( true );
+        }, 10000 );
+
+        op.flushDebugLogs = function() {
+            flushLogs( false );
+        };
+
+        op.log = function( session_key, name, data, level ) {
+            if ( !session_key ) {
+                return;
+            }
+
+            data = data || {};
+            data.time = Date.now();
+
+            var entry = { key: session_key, name: name, data: data };
+
+            var session_log_level = parseInt( session_key.charAt( 0 ) );
+            addEntry( entry, session_log_level >= level );
+        };
+    } );
+} )( jQuery, window );
+

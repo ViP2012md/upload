@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<!-- saved from url=(0051)https://templates.blakadder.com/sonoff_NSPanel.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+<!-- Define multiple use variables -->
+
+
+
+
+  <!-- HTML Meta Tags -->
+
+<link rel="shortcut icon" type="image/x-icon" href="https://templates.blakadder.com/favicon.ico"> 
+<link rel="canonical" href="https://templates.blakadder.com/sonoff_NSPanel.html">
+<meta name="keywords" content="tasmota, templates, tuya, esp8266, esp8285, esp32, esp32-c3, esp32-s2, template, gpio, smarthome, home assistant, smart home, diy, wifi, wi-fi, openhab">  
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+<!-- General Tags -->
+<title>Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota</title> 
+
+<meta name="title" content="Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota">
+<meta name="description" content="Configure your smart display switch to work with Tasmota open source firmware.">
+
+<!-- Google / Search Engine Tags -->
+<meta itemprop="name" content="Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota">
+<meta itemprop="description" content="Configure your smart display switch to work with Tasmota open source firmware.">
+<meta itemprop="image" content="https://templates.blakadder.com/assets/device_images/sonoff_NSPanel.webp">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota">
+<meta property="og:description" content="Configure your smart display switch to work with Tasmota open source firmware.">
+<meta property="og:image" content="https://templates.blakadder.com/assets/device_images/sonoff_NSPanel.webp">
+<meta property="og:url" content="https://templates.blakadder.com/sonoff_NSPanel.html">
+												 
+<!-- Twitter Meta Tags -->
+<meta name="twitter:title" content="Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota">
+<meta name="twitter:description" content="Configure your smart display switch to work with Tasmota open source firmware.">
+<meta name="twitter:image" content="https://templates.blakadder.com/assets/device_images/sonoff_NSPanel.webp">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site:id" content="blakadder_">
+<meta name="twitter:creator:id" content="blakadder_">
+<link rel="stylesheet" href="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/docs.css">
+
+
+
+<script async="" src="https://www.google-analytics.com/analytics.js"></script><script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+  
+    ga('create', 'UA-140681905-1', 'auto');
+    ga('send', 'pageview');
+  
+  </script>
+
+
+<link type="application/atom+xml" rel="alternate" href="https://templates.blakadder.com/feed.xml" title="Tasmota Device Templates Repository">
+  
+<script src="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/clipboard.min.js.download"></script><script charset="utf-8" src="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/button.856debeac157d9669cf51e73a08fbc93.js.download"></script></head>
+
+	<body data-new-gr-c-s-check-loaded="14.1193.0" data-gr-ext-installed="">
+		<div class="wrapper">
+			<sidebar class="sidebar" id="sidebar">
+	<div class="sidebar-mobile">
+		<img src="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/menu.svg" class="menu-icon" id="menu">
+		<img src="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/close.svg" class="close-icon" id="close">
+	</div>
+		<a href="https://templates.blakadder.com/index.html"><img src="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/logo.svg" alt="Logo"></a>
+	<!-- <div class="search">
+	<input type="text" class="search-input" id="search-input" placeholder="Search by device name, type or model ..." />
+</div>
+ -->
+	<div class="sidebar-main">
+		<ul class="navigation" id="navigation">
+    <!-- <li>Devices by Type -->
+        
+    
+        <li><a class="" href="https://templates.blakadder.com/search.html">Search...</a>
+            <ul class="subnav" id="navigation"><li><div style="display: flex; flex-flow: row wrap; " id="subnav"></div></li>
+            </ul>
+        </li>
+    
+        <li><a class="" href="https://templates.blakadder.com/preflashed.html">Preflashed Devices</a>
+            <ul class="subnav" id="navigation"><li><div style="display: flex; flex-flow: row wrap; " id="subnav">
+            <a class="" href="https://templates.blakadder.com/preflashed-type.html">Type</a>&nbsp;|&nbsp; 
+            
+            <a class="" href="https://templates.blakadder.com/preflashed-stand.html">Standard</a> 
+            </div></li>
+            </ul>
+        </li>
+    
+        <li><a class="" href="https://templates.blakadder.com/bulb.html">Bulbs</a>
+            <ul class="subnav" id="navigation"><li><div style="display: flex; flex-flow: row wrap; " id="subnav">
+            <a class="" href="https://templates.blakadder.com/bulb-type.html">Type</a>&nbsp;|&nbsp; 
+            
+            <a class="" href="https://templates.blakadder.com/bulb-socket.html">Socket</a> 
+            </div></li>
+            </ul>
+        </li>
+    
+        <li><a class="" href="https://templates.blakadder.com/cover.html">Curtains, Shutters and Shades</a>
+            <ul class="subnav" id="navigation"><li><div style="display: flex; flex-flow: row wrap; " id="subnav"></div></li>
+            </ul>
+        </li>
+    
+        <li><a class="" href="https://templates.blakadder.com/switch.html">Wall Switches and Dimmers</a>
+            <ul class="subnav" id="navigation"><li><div style="display: flex; flex-flow: row wrap; " id="subnav"></div></li>
+            </ul>
+        </li>
+    
+        <li><a class="" href="https://templates.blakadder.com/relay.html">Module Switches and Dimmers</a>
+            <ul class="subnav" id="navigation"><li><div style="display: flex; flex-flow: row wrap; " id="subnav"></div></li>
+            </ul>
+        </li>
+    
+        <li><a class="" href="https://templates.blakadder.com/light.html">Lights and LEDs</a>
+            <ul class="subnav" id="navigation"><li><div style="display: flex; flex-flow: row wrap; " id="subnav"></div></li>
+            </ul>
+        </li>
+    
+        <li><a class="" href="https://templates.blakadder.com/plug.html">Plugs and Sockets</a>
+            <ul class="subnav" id="navigation"><li><div style="display: flex; flex-flow: row wrap; " id="subnav"></div></li>
+            </ul>
+        </li>
+    
+        <li><a class="" href="https://templates.blakadder.com/sensors.html">Sensors</a>
+            <ul class="subnav" id="navigation"><li><div style="display: flex; flex-flow: row wrap; " id="subnav"></div></li>
+            </ul>
+        </li>
+    
+        <li><a class="" href="https://templates.blakadder.com/misc.html">Appliances</a>
+            <ul class="subnav" id="navigation"><li><div style="display: flex; flex-flow: row wrap; " id="subnav"></div></li>
+            </ul>
+        </li>
+    
+        <li><a class="" href="https://templates.blakadder.com/diy.html">Development Boards and Modules</a>
+            <ul class="subnav" id="navigation"><li><div style="display: flex; flex-flow: row wrap; " id="subnav"></div></li>
+            </ul>
+        </li>
+    
+        <li><a class="" href="https://templates.blakadder.com/esp32.html">ESP32 Based Devices</a>
+            <ul class="subnav" id="navigation"><li><div style="display: flex; flex-flow: row wrap; " id="subnav"></div></li>
+            </ul>
+        </li>
+    
+        <li><a class="" href="https://templates.blakadder.com/standard.html">Devices by Standard</a>
+            <ul class="subnav" id="navigation"><li><div style="display: flex; flex-flow: row wrap; " id="subnav">
+            <a class="" href="https://templates.blakadder.com/eu.html">EU</a>&nbsp;|&nbsp; 
+            
+            <a class="" href="https://templates.blakadder.com/us.html">US</a>&nbsp;|&nbsp; 
+            
+            <a class="" href="https://templates.blakadder.com/uk.html">UK</a>&nbsp;|&nbsp; 
+            
+            <a class="" href="https://templates.blakadder.com/au.html">AU</a>&nbsp;|&nbsp; 
+            
+            <a class="" href="https://templates.blakadder.com/br.html">BR</a>&nbsp;|&nbsp; 
+            
+            <a class="" href="https://templates.blakadder.com/ch.html">CH</a>&nbsp;|&nbsp; 
+            
+            <a class="" href="https://templates.blakadder.com/fr.html">FR</a>&nbsp;|&nbsp; 
+            
+            <a class="" href="https://templates.blakadder.com/il.html">IL</a>&nbsp;|&nbsp; 
+            
+            <a class="" href="https://templates.blakadder.com/in.html">IN</a>&nbsp;|&nbsp; 
+            
+            <a class="" href="https://templates.blakadder.com/it.html">IT</a>&nbsp;|&nbsp; 
+            
+            <a class="" href="https://templates.blakadder.com/jp.html">JP</a>&nbsp;|&nbsp; 
+            
+            <a class="" href="https://templates.blakadder.com/za.html">ZA</a>&nbsp;|&nbsp; 
+            
+            <a class="" href="https://templates.blakadder.com/global.html">GLOBAL</a>&nbsp;|&nbsp; 
+            
+            <a class="" href="https://templates.blakadder.com/all.html">ALL</a> 
+            </div></li>
+            </ul>
+        </li>
+    
+        <li><a class="" href="https://templates.blakadder.com/unsupported.html">Unsupportable Devices</a>
+            <ul class="subnav" id="navigation"><li><div style="display: flex; flex-flow: row wrap; " id="subnav"></div></li>
+            </ul>
+        </li>
+    
+        <li><a class="" href="https://templates.blakadder.com/howto.html">How to use Templates?</a>
+            <ul class="subnav" id="navigation"><li><div style="display: flex; flex-flow: row wrap; " id="subnav"></div></li>
+            </ul>
+        </li>
+    
+        <li><a class="" href="https://blakadder.com/contact">Contact</a>
+            <ul class="subnav" id="navigation"><li><div style="display: flex; flex-flow: row wrap; " id="subnav"></div></li>
+            </ul>
+        </li>
+    
+    <br>
+    <div id="navigation" style="text-align: center; ">
+        <a class="button button button-black" href="https://templates.blakadder.com/new.html">Add new template</a>
+        <br>
+        <iframe id="twitter-widget-0" scrolling="no" frameborder="0" allowtransparency="true" allowfullscreen="true" class="twitter-mention-button twitter-mention-button-rendered twitter-tweet-button" title="X Post Button" src="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/tweet_button.2f70fb173b9000da126c79afe2098f02.en.html" style="position: static; visibility: visible; width: 153px; height: 20px;" data-screen-name="blakadder_"></iframe><script async="" src="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/widgets.js.download" charset="utf-8"></script>
+        <a href="https://paypal.me/tasmotatemplates" target="_blank"><img src="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/v1"></a><a href="https://ko-fi.com/S6S650JEK" target="_blank"><img src="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/v1(1)"></a>
+        <span style="font-size:0.7em;">When purchasing devices through affiliated links you support this site!</span>
+    </div>
+    <div id="navigation" style="text-align: center; ">
+    <br>
+    <br>
+    <br>
+    </div>
+		<!-- <ul id="search-results" class="navigation" ></ul><BR> -->
+	</ul></div> 
+</sidebar>
+			<main class="content">
+					<div class="inner">
+			<div class="container">
+
+<div class="row">
+  <div class="column">
+    <span style="font-size: 3.25rem; font-weight: 400; letter-spacing: -.2rem;">Sonoff NSPanel Touch  Display Switch (E32-MSW-NX)</span> 
+  </div>
+</div>
+<div class="row">
+  <div class="column column-90">
+    
+    
+      <a class="button button-outline button-small" href="https://templates.blakadder.com/eu.html">EU</a>
+    
+      <a class="button button-outline button-small" href="https://templates.blakadder.com/us.html">US</a>
+      
+  </div>
+  <div class="column column-10">
+    <button class="button button-red button-small">
+      ESP32
+      
+    
+  </button></div>
+</div>
+<div class="row">
+  <div class="column column-60"> 
+    <img src="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/sonoff_NSPanel.webp" alt="Sonoff NSPanel Touch" style="max-height: 350px; max-width: 450px;">
+  </div>
+  <div class="column">
+    <p>
+    <b>
+  Available from:
+      </b>
+      <br>
+    <a class="menu" href="https://itead.cc/product/sonoff-nspanel-smart-scene-wall-switch/ref/34/">Itead.cc</a>
+    <br>
+    <a class="menu" href="https://www.aliexpress.com/item/1005003594150166.html?aff_platform=portals-tool&amp;sk=_dYc72Dj&amp;aff_trace_key=ad46a8783ef8414cb3077511738cc481-1595436156311-00915-_dYc72Dj&amp;terminal_id=3ac645b4aa5741e4bebe6d5c100f96fc&amp;tmLog=new_Detail&amp;aff_request_id=ad46a8783ef8414cb3077511738cc481-1595436156311-00915-_dYc72Dj">Aliexpress.com</a>
+    <br>
+    <a class="menu" href="https://www.banggood.com/SONOFF-NSPanel-Smart-Scene-Wall-Switch-EU-US-Wifi-Smart-Thermostat-Display-Switch-All-in-One-Control-for-Alexa-Google-Home-p-1922903.html?p=CM27171011078201412U">Banggood.com</a>
+    <br>
+    <a class="menu" href="https://www.domadoo.fr/en/box-domotique/5985-sonoff-interrupteur-mural-nspanel-smart-scene-eu.html?domid=14">Domadoo.fr</a>
+    <br>
+    <a class="menu" href="https://www.amazon.de/dp/B09MS7JDVQ?tag=NSPanel?tag=tasmotatempla-21">Amazon.de</a>
+    <br><br>
+    
+      <b>
+  Manufacturer:
+      </b>
+      <br>
+      <a class="menu" href="https://itead.cc/product/sonoff-nspanel-smart-scene-wall-switch/ref/34/">Itead.cc</a>
+      
+    <br><br>
+
+    
+    <b>
+      Install method:
+    </b>
+    <br>
+      
+      <a class="menu" href="https://tasmota.github.io/docs/Getting-Started" target="_blank">USB to Serial</a>
+      
+    
+    <br>
+    </p></div>
+    <div class="column" style="overflow-y: auto; height: 380px;">
+      
+
+<table style="font-size: 1.25rem; width: 100%;">
+    <tbody><tr><th>GPIO #</th><th>Component</th></tr>
+    
+      
+      
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO00 
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO01 
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO02 
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO03 
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO04 
+                </td>
+        
+
+        <td>
+            
+            Output Lo
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO05 
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO09
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO10
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO12
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO13
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO14
+                </td>
+        
+
+        <td>
+            
+            Button 1
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO15
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO16
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO17
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO18
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO19
+                </td>
+        
+
+        <td>
+            
+            Relay 2 
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO20
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO21
+                </td>
+        
+
+        <td>
+            
+            Buzzer 
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO22
+                </td>
+        
+
+        <td>
+            
+            Relay 1 
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO23
+                </td>
+        
+
+        <td>
+            
+            User   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO24
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO25
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO26
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO27
+                </td>
+        
+
+        <td>
+            
+            Button 2
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO6
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO7
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO8
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO11
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO32
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO33
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO34
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO35
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO36
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO37
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO38
+                </td>
+        
+
+        <td>
+            
+            ADC Temp
+            
+        </td>
+    </tr>
+    
+    <tr style="white-space: nowrap;">
+        
+            <td>GPIO39
+                </td>
+        
+
+        <td>
+            
+            None   
+            
+        </td>
+    </tr>
+    
+</tbody></table>
+
+
+    </div>
+</div>
+
+
+<div class="row">
+  <div class="column"><strong>Configuration for ESP32</strong></div>
+  <div class="column-10"><a class="button button-outline button-small menu" href="https://github.com/blakadder/templates/tree/master/_templates/sonoff_NSPanel">Edit on GitHub</a></div>
+</div>
+<div class="row">
+  <div class="column column-100">
+    <div class="code-toolbar"><pre class=" language-json"><code class=" language-json" style="white-space: nowrap"><span class="token punctuation">{</span><span class="token property">"NAME"</span><span class="token operator">:</span><span class="token string">"NSPanel"</span><span class="token punctuation">,</span><span class="token property">"GPIO"</span><span class="token operator">:</span><span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">3872</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">32</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">225</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">480</span><span class="token punctuation">,</span><span class="token number">224</span><span class="token punctuation">,</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">33</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token number">4736</span><span class="token punctuation">,</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">,</span><span class="token property">"FLAG"</span><span class="token operator">:</span><span class="token number">0</span><span class="token punctuation">,</span><span class="token property">"BASE"</span><span class="token operator">:</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token property">"CMND"</span><span class="token operator">:</span><span class="token string">"ADCParam1 2,11200,10000,3950 | Sleep 0 | BuzzerPWM 1"</span><span class="token punctuation">}</span></code></pre><div class="toolbar"><div class="toolbar-item"><copy>Copy</copy></div></div></div>
+</div>
+</div>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div>
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+      
+  
+
+  <!--  -->
+
+  
+
+  
+  <strong>Use code <code>BLAKADDER</code> when buying from itead.cc for a 10% discount.</strong>
+  <br><br>
+  <p>
+  
+
+  <!--  -->
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+  
+  </p><div style="float:right; margin:10px; text-align: center;"><img style="width:50px" src="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/blakapproved.webp"> <br><b> by <a href="https://blakadder.com/">blakadder</a></b></div>
+
+<p><a href="https://blakadder.com/sonoff-nspanel/">Review</a>, <a href="https://blakadder.com/nspanel-teardown/">full teardown</a> and <a href="https://blakadder.com/nspanel-hacking">protocol decoding</a>.</p>
+
+<h2 id="serial-flashing">Serial Flashing</h2>
+
+<p>Unclip the panel from the base. Remove two bottom screws and lift the plastic cover.</p>
+
+<p>The five needed pins (3V3, RX, TX, GPIO0 and GND) can be easily identified.</p>
+
+<p><img src="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/sonoff_NSpanel_pinout.webp" alt="Pins"></p>
+
+<p>Download and flash <a href="https://ota.tasmota.com/tasmota32/release/tasmota32-nspanel.factory.bin"><code>tasmota32-nspanel.factory.bin</code></a> or preferably install using <a href="http://tasmota.github.io/install">Tasmota Web Installer</a>.</p>
+
+<p><strong><em>If using standard Tasmota32 builds:</em></strong> Current implementation of serial in Arduino core has a bug which can boot loop the device on soft reset. Power cycling the device solves the issue. PSRAM is also not supported.</p>
+
+<h2 id="configuration">Configuration</h2>
+
+<p>After the flash is complete disconnect the 3.3V power and either power the touch plate using its base or connect to 5V power using the headers.</p>
+
+<p>Apply the template and make sure “Module 0” is selected. The template will apply some of the commands required.</p>
+
+<p>Download the NSPanel driver file <a href="https://raw.githubusercontent.com/blakadder/nspanel/main/nspanel.be"><code>nspanel.be</code></a>. Navigate to <strong>Consoles - Manage File system</strong> in the web UI. Upload the driver to NSPanel with “Choose file” followed by “Start Upload”.</p>
+
+<p><img src="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/sonoff_NSpanel_driver.webp" alt="Upload driver"></p>
+
+<p>To load the driver on startup:</p>
+<ul>
+  <li><strong>Create and edit new file</strong> named <code>autoexec.be</code> with a line <code>load("nspanel.be")</code></li>
+  <li>change the filename to <code>autoexec.be</code> (seems this is not working correctly on Tasmota v10)</li>
+</ul>
+
+<!-- ![autoexec.be](/assets/device_images/sonoff_NSpanel_autoexec.webp) -->
+
+<h2 id="screen-commands">Screen Commands</h2>
+
+<p>To control and communicate with the screen, driver introduces new commands and parsing of the NSPanel protocol. NSPanel protocol is <a href="https://blakadder.github.io/nspanel/">documented here</a> (all updates are welcome).</p>
+
+<h3 id="nspsend">NSPSend</h3>
+
+<p>To control the switch GUI the <code>NSPSend</code> command is introduced</p>
+
+<p><code>NSPSend &lt;json_payload&gt;</code> sends a command to the screen using <a href="https://blakadder.github.io/nspanel">NSPanel protocol</a></p>
+
+<p><code>NSPSend2 &lt;nextion_command&gt;</code> sends a command to the screen using <a href="https://nextion.tech/instruction-set/">Nextion protocol</a>. This requires the screen to be in “Nextion mode” with command <code>NSPMode 1</code>.</p>
+
+<h3 id="nspmode">NSPMode</h3>
+
+<p><code>NSPMode</code> command switches the command mode of the screen. Command with no payload returns the current state.</p>
+
+<p><code>0</code> is the default NSPanel protocol. Screen is always in <code>0</code> on startup.</p>
+
+<p><code>1</code> puts the screen in Nextion command mode. When the screen is in this mode NSPanel commands will not work.</p>
+
+<p><em>The code might not be 100% reliable and state tracking might fail</em></p>
+
+<h3 id="nspdim">NSPDim</h3>
+
+<p><code>NSPDim</code> is used to turn on the “Energy-saving mode”. Value is stored in <code>_persist.json</code></p>
+
+<p><code>0</code> is the default where the screen stays on permanently but dimmed.</p>
+
+<p><code>1</code> turns on the Energy-saving mode in which screen turns off after the set timeout period.</p>
+
+<h3 id="nsplocation">NSPLocation</h3>
+
+<p><code>NSPLocation &lt;name&gt;</code> to set location used for weather forecasts. Value is stored in <code>_persist.json</code>.</p>
+
+<p>Location can be a name or latitude and longitude with 2 decimals max. Example: <code>North Pole</code> or <code>64.75,-147.34</code>. Check whether your location works with https://wttr.in/Location, if not use the coordinates.</p>
+
+<p>If you don’t set it it’ll show North Pole forecast.</p>
+
+<h2 id="features">Features</h2>
+
+<p>Both relays and buttons, buzzer and temperature sensor are a part of Tasmota just like any standard switch.</p>
+
+<p>Use <a href="https://tasmota.github.io/docs/Buzzer/"><code>Buzzer</code></a> command to control the buzzer.</p>
+
+<p>To set which widgets to draw and thermostat settings you need to edit the <code>nspanel.be</code> file variables “widget” and “atc”.</p>
+
+<p>Relay states are reflected on the main screen bottom bars using <code>set_power()</code> in the driver.</p>
+
+<p>Time and date will update automatically each minute according to Tasmota time using <code>set_clock()</code>.</p>
+
+<p>Weather updates will use NSPLocation value using function <code>set_weather()</code> to fetch data from <a href="https://wttr.in/:help">wttr.in</a>. Since it currently cannot provide date range I winged it by using Feelslike temperature.</p>
+
+<p>Indoor temperature will update on TelePeriod using the NSPanel temperature probe data with <code>set_temp()</code> functions. You can change the source by commenting out associated <code>tasmota.add_rule</code> triggers or update remotely with <code>NSPSend {"temperature":24.5,"tempUnit":"C"}</code>.</p>
+
+<p>Every touch event will be reported in Tasmota logs and can be used in rules with trigger <code>NSPanel#...</code></p>
+
+<p>If you want the option to reset the screen change GPIO4 to “Relay 3”. This pin need to be low for the screen to turn on so set <code>PulseTime3 2</code> to temporarily pull it high just enough for the screen to reset.</p>
+
+<h2 id="use-example">Use Example</h2>
+<p>When turning on thermostat toggle object Tasmota receives <code>tele/nspanel/RESULT = {"NSPanel":{"ATCEnable":1}}</code> command in logs. This can be used in a rule:</p>
+
+<div class="code-toolbar"><pre class=" language-console"><code class=" language-console"><span class="token regex">Rule1</span><span class="token selector"> on</span><span class="token constant"> NSPanel#ATCEnable</span><span class="token selector"> do</span> Publish cmnd/heater/Power1 %value%<span class="token selector"> endon</span>
+</code></pre><div class="toolbar"><div class="toolbar-item"><copy>Copy</copy></div></div></div>
+<p>When triggered, the rule will send a Power command to the heater switch with Tasmota with the value of the toggle object.</p>
+
+<p>To mirror the state of the heater with the screen you can create a rule on the heater switch to send updates to the screen with:</p>
+<div class="code-toolbar"><pre class=" language-console"><code class=" language-console"><span class="token regex">rule1</span><span class="token selector"> on</span><span class="token constant"> power1#state</span><span class="token selector"> do</span> cmnd/nspanel/nspsend <span class="token json language-json"><span class="token punctuation">{</span><span class="token property">"ATCEnable"</span><span class="token operator">:</span>%value%<span class="token punctuation">}</span></span><span class="token selector"> endon</span>`
+</code></pre><div class="toolbar"><div class="toolbar-item"><copy>Copy</copy></div></div></div>
+ 
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</div>
+
+<div id="amzn-assoc-ad-c632316f-24d7-45e3-9fd2-4f1038ceddbc"></div><script async="" src="https://z-na.amazon-adsystem.com/widgets/onejs?MarketPlace=US&amp;adInstanceId=c632316f-24d7-45e3-9fd2-4f1038ceddbc"></script>
+
+				</div>
+			</div></main>
+		</div>
+		<script src="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/zepto.min.js.download"></script>
+<script src="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/lunr.min.js.download"></script>
+<script src="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/prism.js.download"></script>
+<script src="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/copy.js.download"></script>
+<script src="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/database.js.download"></script>
+<script src="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/search.js.download"></script>
+<script src="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/mobile-navigation.js.download"></script>
+
+	
+
+<iframe scrolling="no" frameborder="0" allowtransparency="true" src="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/widget_iframe.2f70fb173b9000da126c79afe2098f02.html" title="Twitter settings iframe" style="display: none;"></iframe><iframe id="rufous-sandbox" scrolling="no" frameborder="0" allowtransparency="true" allowfullscreen="true" style="position: absolute; visibility: hidden; display: none; width: 0px; height: 0px; padding: 0px; border: none;" title="Twitter analytics iframe" src="./Sonoff NSPanel Touch Display Switch (E32-MSW-NX) Configuration for Tasmota_files/saved_resource.html"></iframe></body><grammarly-desktop-integration data-grammarly-shadow-root="true"><template shadowrootmode="open"><style>
+      div.grammarly-desktop-integration {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select:none;
+        user-select:none;
+      }
+
+      div.grammarly-desktop-integration:before {
+        content: attr(data-content);
+      }
+    </style><div aria-label="grammarly-integration" role="group" tabindex="-1" class="grammarly-desktop-integration" data-content="{&quot;mode&quot;:&quot;full&quot;,&quot;isActive&quot;:true,&quot;isUserDisabled&quot;:false}"></div></template></grammarly-desktop-integration></html>

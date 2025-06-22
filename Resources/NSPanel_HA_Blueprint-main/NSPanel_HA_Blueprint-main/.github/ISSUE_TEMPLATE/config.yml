@@ -1,0 +1,20 @@
+---
+blank_issues_enabled: false
+
+contact_links:
+  - name: Questions & General Discussions
+    url: https://github.com/Blackymas/NSPanel_HA_Blueprint/discussions
+    about: Join our Discussions for community chats, questions, idea sharing, and collaboration. Use Issues for reporting bugs or requesting enhancements.
+
+  - name: Troubleshooting TFT Transfer Issues
+    url: https://github.com/Blackymas/NSPanel_HA_Blueprint/blob/main/docs/tft_upload.md
+    about: Having trouble transferring a TFT file? Our guide might have the solution.
+
+  - name: Resolve Compiling Errors
+    url: https://github.com/Blackymas/NSPanel_HA_Blueprint/blob/main/docs/error_compiling.md
+    about: Check this guide if you're experiencing compile errors.
+
+  - name: Getting Started Guide
+    url: https://github.com/Blackymas/NSPanel_HA_Blueprint/blob/main/docs/install.md
+    about: New to NSPanel HA Blueprint? Start here for installation and setup instructions.
+...

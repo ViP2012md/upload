@@ -1,0 +1,8 @@
+"define"in window&&define("discourse/theme-27/discourse/pre-initializers/theme-27-translations",["exports"],(function(e){"use strict"
+Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0
+e.default={name:"theme-27-translations",initialize(){const e={en:{warning_modal:{title:"Are you posting code?",content:"It looks like your post may contain code or logs. To keep your post readable, please remember to **format your code** using the *Preformatted text* toolbar button <kbd></></kbd>, or the backtick <kbd>`</kbd> key on your keyboard, like so:\n\n`` `single line` ``\n\n````\n```\nmultiple\nlines\n```\n````\n",do_not_show_again:"do not show this message again",fix_post:"Edit Post",ignore_and_post_anyway:"Post Anyway"}}}
+for(let o in e){let t=I18n.translations
+for(let e of[o,"js","theme_translations"])t=t[e]=t[e]||{}
+t[27]=e[o]}}}}))
+
+//# sourceMappingURL=a6776413aed9a4b8bc8dc376d478ef884afa3847.map?__ws=community.home-assistant.io

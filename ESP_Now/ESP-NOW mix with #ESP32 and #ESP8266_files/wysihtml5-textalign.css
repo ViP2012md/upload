@@ -1,0 +1,30 @@
+/**
+ *	@note THIS FILE IS DEPRECATED!! NO LONGER USED AND ONLY HERE TO SUPPORT LEGACY PAGES THAT STILL HAVE THESE STYLES.
+ *
+ * Adding CSS rules for WYSIWYG HTML 5 Support
+ *
+ * @note HEY. If you are updating this file, then you should probably be
+ *  updating 3.0/www/js/ontraport/components/form_control/textarea/wysihtml5-textalign.css too!
+ *
+ * https://github.com/xing/wysihtml5/wiki/Supported-Commands
+ */
+ .wysiwyg-text-align-center {
+	display: inline-block;
+	width: 100%;
+	text-align: center;
+	text-decoration: inherit;
+}
+
+.wysiwyg-text-align-left {
+	display: inline-block;
+	width: 100%;
+	text-align: left;
+	text-decoration: inherit;
+}
+
+.wysiwyg-text-align-right {
+    display: inline-block;
+    width: 100%;
+    text-align: right;
+	text-decoration: inherit;
+}

@@ -1,0 +1,2090 @@
+// is user active global vars
+window.abst = window.abst || {};
+// activity timer
+window.abst.eventQueue = [];
+window.abst.abconvertpartner = {};
+// Check localStorage for existing approval status, default to waiting if not found
+window.abst.waitForApproval = false;//localStorage.getItem('abstApprovalStatus') !== 'approved';
+
+// Helper function to set approval status
+function setAbstApprovalStatus(approved) {
+  window.abst.waitForApproval = !approved;
+  if (approved) {
+    localStorage.setItem('abstApprovalStatus', 'approved');
+  } else {
+    localStorage.removeItem('abstApprovalStatus');
+  }
+}
+
+// activity timer - initialize once as an object
+window.abst.timer = localStorage.getItem('absttimer') === null ? {} : JSON.parse(localStorage.getItem('absttimer') || '{}');
+
+window.abst.currscroll = window.scrollY;
+window.abst.currentMousePos = -1;
+window.abst.oldMousePos = -2;
+window.abst.abactive = true;
+window.abst.timeoutTime = 3000; // how much inactivity before we stop loggin in milliseconds
+window.abst.intervals = {};
+// Initialize service partners
+const services = ['abawp', 'clarity', 'gai', 'abmix', 'abumav', 'umami', 'cabin', 'plausible', 'fathom', 'ga4', 'posthog'];
+window.abst.abconvertpartner = Object.fromEntries(services.map(service => [service, false]));
+
+//what size, mobile, tablet or desktop 
+if(window.innerWidth < 768) {
+  window.abst.size = 'mobile';
+} 
+else if(window.innerWidth < 1024) {
+  window.abst.size = 'tablet';
+}
+else {
+  window.abst.size = 'desktop';
+}
+
+  if(window.btab_vars && window.btab_vars.advanced_tracking == '1') {
+    setAbCrypto();
+  }
+
+  // add server events to cookie to be evented on next page load
+  function addServerEvents(data) {
+    const serverEvents = abstGetCookie('abst_server_events');
+
+  if (serverEvents) {
+    const events = JSON.parse(decodeURIComponent(serverEvents));
+    if (!events.some(event => event.eid === data.eid && event.variation === data.variation && event.type === data.type)) {
+      events.push(data);
+      abstSetCookie('abst_server_events', JSON.stringify(events), 2);
+      console.log('server event added to existing', data);
+    }
+  } else {
+    abstSetCookie('abst_server_events', JSON.stringify([data]), 2);
+    console.log('server event added none existing creating', data);
+  }
+}
+
+
+  jQuery(document).ready(function(){
+
+    const serverEvents = abstGetCookie('abst_server_events');
+    if (serverEvents) {
+      let events;
+      try {
+        events = JSON.parse(decodeURIComponent(serverEvents));
+      } catch (e) {
+        events = [];
+      }
+      if (Array.isArray(events)) {
+        events.forEach(event => {
+          //console.log('server event', event);
+          btab_track_event(event);
+        });
+      }
+      deleteCookie('abst_server_events');
+    }
+
+    if( window.btab_vars && !window.btab_vars.is_preview && jQuery('.ab-test-page-redirect').length > 0 ) {
+      jQuery('.ab-test-page-redirect').remove();
+    }
+
+    if( jQuery('[bt_hidden="true"]').length > 0 ) {
+      jQuery('[bt_hidden="true"]').remove();
+    }
+
+  
+    // update scroll status
+    jQuery(document).mousemove(function(event) {
+      window.abst.currentMousePos = event.pageX;
+    });
+    // catch mouse / keyboard action
+    jQuery('body').on('mousedown keydown touchstart', function(event) {
+      userActiveNow();
+    });
+    
+    if(!('abConversionValue' in window.abst))
+      window.abst.abConversionValue = 1;
+
+    window.abst.timerInterval = setInterval(function(){
+      //check if scroll's changed
+
+      if((window.abst.currscroll != window.scrollY) || (window.abst.currentMousePos != window.abst.oldMousePos) )
+      {
+        window.abst.currscroll = window.scrollY;
+        window.abst.oldMousePos = window.abst.currentMousePos;
+        userActiveNow();
+      }
+
+      // check for active class and decrement all active timers
+      if(window.abst.abactive) //for each active timer, increment
+        abstOneSecond();
+
+    },1000); // every second
+
+
+    //conversion things
+    if (typeof conversion_details !== 'undefined' &&  conversion_details)
+    {
+      var eid = null;
+      var variation = null;
+
+      // current p info
+      page_url = normalizeUrl(window.location.href);
+      //loop through each conversion d
+      jQuery.each( conversion_details, function( key, detail ) {
+
+        //regex url matching for url's with *   *about*
+        if (detail.conversion_page_url && page_url) {
+          // Escape special characters in the user input
+          var escapedUrl = detail.conversion_page_url.replace(/([.+?^${}()|[\]\\])/g, '\\$1');
+          // Replace * with a regex pattern (.*)
+          var regexPattern = escapedUrl.replace(/\*/g, '.*');
+          // Create a regular expression object
+          var regex = new RegExp(`^${regexPattern}$`);
+        }
+
+        if(typeof regex !== 'undefined'){
+          if (regex.test(page_url)) {
+              eid = key;
+          }
+        }
+        else if((detail.conversion_page_url === page_url) && (detail.conversion_page_url !== undefined) && (detail.conversion_page_url != ''))  
+        {
+          eid = key;
+        }
+        else if(current_page.includes(detail.conversion_page_id) || current_page.includes(parseInt(detail.conversion_page_id))) 
+        {
+          eid = key;
+        }
+        else
+        {
+          return true; // skip to the next one
+        }
+
+        variation = abstGetCookie('btab_'+eid);
+
+        if(!variation)
+          return true; // skip to the next one
+        
+        variation = JSON.parse(variation);
+
+        //skip if its already converted
+        if( variation.conversion == 1 )
+          return true; // skip to the next one
+        conversionValue = 1;
+        if(window.abst.abConversionValue && detail.use_order_value == true)// woo etc
+          conversionValue = window.abst.abConversionValue;
+
+        bt_experiment_w(eid,variation.variation,'conversion',false,conversionValue);
+    });
+
+    }
+
+    //foreach experiment
+    if (typeof bt_experiments !== 'undefined')
+    {
+      // check for css classes, then add attributes
+      jQuery("[class^='ab-'],[class*=' ab-']").each(function(e){
+        if(jQuery(this).attr('class').includes('ab-var-') || jQuery(this).attr('class').includes('ab-convert'))
+        {
+          allClasses = jQuery(this).attr('class');
+          allClasses = allClasses.split(" "); // into an array
+          thisTestVar = false;
+          thisTestGoal = false;
+          thisTestId = false;
+          thisTestConversion = false;
+          allClasses.forEach(function(element) { 
+            
+            if(element.startsWith('ab-var-'))
+              thisTestVar = element;
+            else if (element.startsWith('ab-goal-'))
+              thisTestGoal = element;
+            else if(element.startsWith('ab-') && !element.includes('ab-convert') )
+              thisTestId = element;          
+            if(element == 'ab-convert')
+              thisTestConversion = true;
+
+          });
+
+          if(thisTestVar !== false && thisTestId !== false)
+          {
+            //we've got variations, do ya thing!
+            jQuery(this).attr('bt-eid',thisTestId.replace("ab-",""));
+            jQuery(this).attr('bt-variation',thisTestVar.replace("ab-var-",""));
+          }
+
+          if(thisTestConversion == true && thisTestId !== false)
+          {
+            // it's a conversion, convert!
+            abstConvert(thisTestId.replace("ab-",""));
+          }
+
+          if(thisTestGoal == true && thisTestId !== false)
+          {
+            //its a goal, record it!
+            abstGoal(thisTestId.replace("ab-",""),thisTestGoal.replace("ab-goal-",""));
+          }
+        }
+
+        if(jQuery(this).attr('class').includes('ab-click-convert-'))
+        {
+          jQuery(this).attr('class').split(" ").forEach(function(element) { // loop through all classes
+            if(element.trim().startsWith('ab-click-convert-'))
+              abClickListener(element.replace("ab-click-convert-",""),"."+element);
+          });
+        }
+
+      });
+
+      // legacy probably can be removed, check bricks 
+      jQuery("[data-bt-variation]").each(function(){ 
+        jQuery(this).attr('bt-variation',jQuery(this).attr('data-bt-variation')); 
+        jQuery(this).attr('bt-eid',jQuery(this).attr('data-bt-eid')); 
+      }); 
+
+      //fix bricks child attributes
+      //fix bricks, move attr's up one level       
+      document.querySelectorAll(".bricks-element [bt-eid]").forEach(el => {
+        let parent = el.closest('.bricks-element');
+        parent.setAttribute('bt-eid', el.getAttribute('bt-eid'));
+        parent.setAttribute('bt-variation', el.getAttribute('bt-variation'));
+        el.removeAttribute('bt-eid');
+        el.removeAttribute('bt-variation');
+      });
+
+      let searchParams = new URLSearchParams(window.location.search)
+      const abtv = searchParams.get("abtv");
+      const abtid = searchParams.get("abtid");
+
+      //sort experiments by bt_experiments.test_type = full_page, then the rest
+      bt_experiments = Object.entries(bt_experiments).sort((a, b) => {
+        if (a[1].test_type == "full_page") {
+          return -1;
+        }
+        if (b[1].test_type == "full_page") {
+          return 1;
+        }
+        return 0;
+      }).reduce((r, a) => Object.assign(r, { [a[0]]: a[1] }), {});
+
+      if (abtv && abtid && bt_experiments[abtid]) {
+        console.log('AB Split Test: URL variables detected. Skipping user.');
+        showSkippedVisitorDefault(abtid,true,abtv);
+        document.body.classList.add('ab-test-setup-complete');
+        return true; 
+      }
+      jQuery.each(bt_experiments, function(experimentId, experiment) {
+        //check for URL variables and then ignore the user
+    
+        // if there is a winner, AND the current page is the default page and AUTOCOMPLETE then just go straight there do not pass go
+        if(experiment.test_winner) 
+        {
+          if(experiment.test_type == 'full_page' && (experiment.full_page_default_page == btab_vars.post_id)) // if full p and the p is this page
+          {
+            if(experiment.test_winner !== btab_vars.post_id) // if its not the current page
+            {
+              if(experiment.page_variations[experiment.test_winner] == undefined) // if its not defined
+              {
+                //console.log('split test winner is not found, not redirecting');
+                return false; // skip
+              }
+
+              //console.log('Split Test winner is page redirect. Redirecting to '+ experiment.page_variations[experiment.test_winner]);
+              window.location.replace( abRedirectUrl(experiment.page_variations[experiment.test_winner]));
+
+              return false;
+            }
+            else // it is the current page so show it
+            {
+              console.log('Test winner is current page. Showing '+ experiment.test_winner);
+              document.body.classList.add('abst-show-page');
+              return false; // skip 2 next experiment
+            }
+
+          }
+          else if(experiment.test_type == 'magic')
+          {
+            console.log('Magic winner is '+ experiment.test_winner + ' WHAT DO I DO NOW TODO');
+          }
+          else if(experiment.test_type == 'css_test')
+          {
+            console.log('Split Test CSS winner. Showing '+ experiment.test_winner);
+            jQuery('body').addClass(experiment.test_winner);
+          } // text test winner todo
+          else // on page test
+          {
+
+            //show variation
+            //console.log('Split Test winner is on this page. Showing '+ experiment.test_winner);
+            jQuery('*[bt-eid=\"'+experimentId+'\"][bt-variation=\"'+experiment.test_winner+'\"]').addClass('bt-show-variation');
+          }
+          return true;
+          //skip this experiment
+        }
+        
+        if(experiment.test_type == "css_test")
+        {
+          for (var i = 0; i < experiment.css_test_variations; i++) {
+            // Code to be executed for each element
+            jQuery('body').append('<script class="bt-css-scripts" bt-variation="test-css-'+experimentId+'-'+ (i+1)+ '" bt-eid="'+experimentId+'"/>');
+          }
+        }
+
+        //full page test handler
+        if(experiment.test_type == 'full_page' && experiment.full_page_default_page == btab_vars.post_id)
+        {
+          //add original do nothing variation
+          jQuery('body').append('<div class="bt-redirect-handle" style="display: none !important" bt-variation="'+experiment.full_page_default_page+'" bt-eid="'+experimentId+'"></div>');
+          //foreach variation
+          jQuery.each(experiment.page_variations,function(varId,variation){
+            jQuery('body').append('<div class="bt-redirect-handle" style="display: none !important" bt-variation="'+varId+'" bt-eid="'+experimentId+'" bt-url="'+variation+'"></div>');
+          });
+        }
+
+        
+        //add conversion click handlers
+        if(experiment.conversion_page == 'selector')
+        {
+          if(experiment.conversion_selector != '')
+          {
+            var conversionSelector = experiment.conversion_selector;
+            abClickListener(experimentId,conversionSelector, 0);
+          }
+        }
+
+
+        // if experiment goals exists
+          //loop through
+        if(experiment['goals'])
+          for (var i = 1; i < Object.keys(experiment['goals']).length; i++) {
+            // if experiment.goals[i] key is click
+            //get key name for goal
+            const firstKey = Object.keys(experiment['goals'][i])[0];
+          
+
+            // click selector
+            if(firstKey === 'selector')
+            {
+              abClickListener(experimentId,experiment['goals'][i]['selector'], i);
+            }
+
+            // text subgoall
+            startInverval = false;
+            if(firstKey === 'text')
+            {
+              startInverval = true;
+    
+              convstatus = abstGetCookie('btab_'+experimentId); 
+              if(startInverval && convstatus) // if test exists and not false
+              {
+                convstatus = JSON.parse(convstatus);
+                if (convstatus && convstatus['goals'] && convstatus['goals'][i] == 1)
+                  startInverval = false;
+              }
+    
+              if(experiment['goals'][i]['text'] == '')
+                startInverval = false;
+    
+              //if text exists and not complete
+              if(startInverval)
+              {
+                startTextWatcher(experimentId,experiment['goals'][i]['text'],i);
+              }
+            }
+
+            if(firstKey === 'page')
+            {
+              var goalPage = experiment['goals'][i]['page'];
+
+              if(goalPage == btab_vars.post_id){
+                abstGoal(experimentId,i);
+              }
+            }
+
+            if(firstKey === 'url')
+            {
+              page_url = normalizeUrl(window.location.href);
+
+              goal_url = normalizeUrl(experiment['goals'][i]['url']);
+
+              if(page_url == goal_url){
+                abstGoal(experimentId,i);
+                }
+
+            }
+            
+          }
+        
+        
+
+        //text conversion
+        if(experiment.conversion_page == 'text')
+        {
+          startInverval = true;
+          if(!bt_experiments[experimentId])
+            startInverval = false; // not if not defined
+
+          convstatus = abstGetCookie('btab_'+experimentId); 
+          if(startInverval && convstatus) // if test exists and not false
+          {
+            convstatus = JSON.parse(convstatus);
+            if(convstatus.conversion == 1) // if its converted
+              startInverval = false;
+          }
+
+          if(experiment.conversion_text == '')
+            startInverval = false;
+
+          //if text exists and not complete
+          if(startInverval)
+          {
+            startTextWatcher(experimentId,experiment.conversion_text);
+          }
+        }
+
+        //text subgoals
+
+
+
+
+        if(experiment.conversion_page == 'surecart-order-paid' && window.scData  ) // if surecart is slected and surecart js is detected
+        {
+          document.addEventListener('scOrderPaid', function(e) { // add listener
+            console.log('surecart OrderPaid');
+            const checkout = e.detail;
+            if( checkout && checkout.amount_due ) {
+              if( experiment.use_order_value == true)
+                  window.abst.abConversionValue = (checkout.amount_due/100).toFixed(2); // set value
+              abstConvert(experimentId, window.abst.abConversionValue);
+            }
+          });   
+      }
+
+
+        if( experiment.conversion_page == 'fingerprint' && !localStorage.getItem("ab-uuid") ) { 
+          console.log("ab-uuid: set fingerprint");
+          setAbFingerprint();
+        } 
+      
+      });
+
+
+      var experiments_el = jQuery('[bt-eid]:not([bt-eid=""])[bt-variation]:not([bt-variation=""])');
+      var current_exp = {};
+      var exp_redirect = {};
+
+      experiments_el.each(function(e) {
+        var me = jQuery(this),
+            experimentId = me.attr('bt-eid'),
+            variation = me.attr('bt-variation'),
+            redirect_url = me.attr('bt-url');
+
+        if( current_exp[experimentId] === undefined ) {
+           current_exp[experimentId] = [];
+          exp_redirect[experimentId] = [];
+        }        
+        if (!current_exp[experimentId].includes(variation)) {
+          current_exp[experimentId].push(variation);
+          exp_redirect[experimentId][variation] = redirect_url;
+        }
+      
+      });
+
+      // add css tests to current exp
+      jQuery.each(bt_experiments, function(experimentId, value) {
+        // Code to be executed for each element
+        if(bt_experiments[experimentId]['test_type'] == 'css_test')
+        {
+          current_exp[experimentId] = []; // create
+          exp_redirect[experimentId] = [];
+
+          for (var i = 1; i <= parseInt(bt_experiments[experimentId]['css_test_variations']); i++) {
+            current_exp[experimentId].push('test-css-'+experimentId+'-'+i);
+            exp_redirect[experimentId]['test-css-'+experimentId+'-'+i] = '';
+          }
+        }
+        else if(bt_experiments[experimentId]['test_type'] == 'magic')
+        {
+          if(bt_experiments[experimentId]['magic_definition'] && bt_experiments[experimentId]['magic_definition'].length > 0){
+            magic_definition = JSON.parse(bt_experiments[experimentId]['magic_definition']);
+            current_exp[experimentId] = []; // create
+            exp_redirect[experimentId] = [];
+            var randVar = getRandomInt(0, magic_definition[0].variations.length - 1);
+            current_exp[experimentId].push('test-magic-'+experimentId+'-'+randVar); 
+            exp_redirect[experimentId]['test-magic-'+experimentId+'-'+randVar] = '';
+          }
+        }
+      });
+     
+      jQuery.each(current_exp, function(experimentId, variations) {
+        //check it exists
+        if( bt_experiments[experimentId] === undefined ) {
+          console.log("ABST: " +'Test ID '+ experimentId +' does not exist.');
+          showSkippedVisitorDefault(experimentId); 
+          return true; // continue to next exp
+        }
+
+    
+
+        // if there is a winner for the test, then do no more - its already done above
+        if( bt_experiments[experimentId].test_winner) 
+          return true; // continue to next exp
+
+        /*
+        //if cookie consent isnt done, then show default
+        if ('BorlabsCookie' in window)
+        {
+          // borlabs v2
+          if (typeof window.BorlabsCookie.checkCookieConsent === 'function' &&
+              !window.BorlabsCookie.checkCookieConsent('split-test') &&
+              !window.BorlabsCookie.checkCookieConsent('ab-split-test'))
+            {
+              console.log('Borlabs cookie consent prevented a split test from running');
+              showSkippedVisitorDefault(experimentId);
+              return true; // continue to next exp
+            }
+          //borlabs v3
+          if(typeof window.BorlabsCookie.Consents.hasConsent === 'function')
+          {
+            if(!window.BorlabsCookie.Consents.hasConsent('split-test') && !window.BorlabsCookie.Consents.hasConsent('ab-split-test') )
+            {
+              console.log('Borlabs v3 cookie consent prevented a split test from running');
+              showSkippedVisitorDefault(experimentId);
+              return true; // continue to next exp
+            }
+          }
+        }
+        */
+
+          
+        if( bt_experiments[experimentId]['is_current_user_track'] == false ) {
+          showSkippedVisitorDefault(experimentId);
+          return true; // continue to next exp
+        }
+
+        // if the test is not published
+        if( bt_experiments[experimentId]['test_status'] !== 'publish' ) {
+          showSkippedVisitorDefault(experimentId);
+          return true; // continue to next exp
+        }
+
+        var targetVisitor = true;
+
+        var btab = abstGetCookie('btab_'+ experimentId);
+        
+        var experimentVariation = '';
+
+        if( !btab ) // no existing data, create
+        {
+          if(bt_experiments[experimentId]['test_type'] == 'css_test'){
+            var randVar = getRandomInt(1, parseInt(bt_experiments[experimentId]['css_test_variations'])) - 1;    
+          }
+          else if(bt_experiments[experimentId]['test_type'] == 'magic' && bt_experiments[experimentId]['magic_definition'] && bt_experiments[experimentId]['magic_definition'].length > 0){
+            magic_definition = JSON.parse(bt_experiments[experimentId]['magic_definition']);
+            //console.log(magic_definition[0].variations);
+            var randVar = getRandomInt(0, magic_definition[0].variations.length - 1);
+            variations = magic_definition[0].variations
+          }
+          else
+            var randVar = getRandomInt(0, variations.length - 1);
+
+          
+          if(btab_vars.is_free == '1' && variations.length > 2){
+            var randVar = getRandomInt(0, 1);  //limit to 2
+            console.log('Free version of AB Split Test is limited to 1 variation. Your others will not be shown. Upgrade: https://absplittest.com/pricing?ref=ug');
+          }
+
+          experimentVariation = variations[randVar];
+
+
+        } 
+        else //parse existing data
+        { 
+          
+          try {
+            var btab_cookie = JSON.parse(btab);
+            experimentVariation = btab_cookie.variation;
+          } catch (err) {
+            console.log('Error parsing cookie data:', err);
+          }
+        }
+ 
+        var variation_element = false;
+        if(bt_experiments[experimentId]['test_type'] == 'css_test') 
+        {
+          jQuery('body').addClass(experimentVariation); 
+        }
+        else if(bt_experiments[experimentId]['test_type'] == 'magic')
+        {
+        }
+        else // on page tests
+        {   
+          variation_element = jQuery('*[bt-eid=\"'+experimentId+'\"][bt-variation=\"'+experimentVariation+'\"]'); 
+        } 
+ 
+        if( btab ){ // if we have a cookie
+            btab = JSON.parse( btab );
+            var redirect_url = exp_redirect[experimentId];
+            redirect_url = redirect_url[experimentVariation];
+            if( redirect_url && !btab_vars.is_preview ) {
+              window.location.replace( abRedirectUrl( redirect_url) );
+              return true; // finished
+            }
+            else
+            {
+              abstShowPage(); // full page
+              if(variation_element)
+                variation_element.addClass('bt-show-variation');  // on page
+
+              if(bt_experiments[experimentId]['test_type'] == 'magic')
+              {
+                magic_definition = JSON.parse(bt_experiments[experimentId]['magic_definition']);
+
+                magic_definition.forEach((element, index) => {
+                  magicSelector = jQuery(element.selector);
+                  var vartn = btab.variation.replace('magic-', '');
+                  if(element.type == 'text')
+                  {
+                    magicSelector.text(element.variations[vartn]);
+                    //console.log('swapped text  ');
+                  }
+                  else if(element.type == 'image')
+                  {
+                    magicSelector.attr('src', element.variations[vartn]).attr('srcset', element.variations[vartn]);
+                    //console.log('swapped img');
+                  }
+                });
+              }
+            }
+            return true; // continue to next exp
+        }
+
+        if( !btab ) { // new user, check targeting
+          var targetPercentage = bt_experiments[experimentId].target_percentage;
+          
+          if(targetPercentage == '')
+            targetPercentage = 100;
+          
+          var url_query = bt_experiments[experimentId].url_query;
+          urlQueryResult = null;
+          
+          //we've got a url query
+          if(url_query !== '')
+          {
+            if(url_query.includes('*'))
+            {
+              //console.log('wildcard search the entire URL ' + url_query);
+              //              wildcard search the entire URL
+              //remove the *
+              url_query = url_query.replace(/\*/g,'');
+              console.log('url_query',url_query);
+              console.log('window.location.href',window.location.href);
+              targetVisitor = window.location.href.includes(url_query);
+              // if href includes string 
+              //console.log('targetVisitor',targetVisitor);
+            }
+            else
+            {
+              var exploded_query = url_query.trim().split("=");
+              if(exploded_query.length == 1) // just the query key
+              {
+                targetVisitor = bt_getQueryVariable(exploded_query[0]);
+              }
+              else if(exploded_query.length == 2) //query key and value
+              {
+                urlQueryResult = bt_getQueryVariable(exploded_query[0]);
+                targetVisitor = exploded_query[1] == urlQueryResult;
+              } // else if the string contains an * then we are going to wildcard search the entire URL
+            }
+          }
+          
+          var target_option_device_size = bt_experiments[experimentId].target_option_device_size;
+
+          if(targetVisitor && target_option_device_size != 'all')
+          {
+            var device_size = window.abst.size;
+
+            targetVisitor = target_option_device_size.includes(device_size);
+
+          }
+
+
+          if(!targetVisitor)
+          {
+            showSkippedVisitorDefault(experimentId);
+            return true;  // continue to next exp
+          }
+          // randomly target users according to percentage
+          var percentage = getRandomInt(1,100);
+          if(targetPercentage < percentage)
+          {        
+            showSkippedVisitorDefault(experimentId,true);
+            console.log('ABST ' + experimentId+' skipped not in percentage target');
+            return true;  // continue to next exp
+          } 
+
+          // no experiment cookie set, calculate and create        
+          bt_experiments[experimentId].variations = bt_get_variations(experimentId);
+        } 
+
+        if(variation_element && !variation_element.length) 
+        {
+          showSkippedVisitorDefault(experimentId);
+          console.log('ABST variation doesnt exist, or doesnt match');
+          return true;  // continue to next exp
+        }
+
+        if (Object.keys(exp_redirect).length > 0)
+        {
+          redirect_url = exp_redirect[experimentId];
+          redirect_url = redirect_url[experimentVariation];
+        }
+        else
+          redirect_url = '';
+
+        // if its css, add it to body   
+
+        if(bt_experiments[experimentId]['test_type'] == 'magic')
+          {
+            magic_definition.forEach((element, index) => {
+              magicSelector = jQuery(element.selector);
+              if(element.type == 'text')
+              {
+                magicSelector.text(magic_definition[index].variations[parseInt(randVar)]);
+              }
+              else if(element.type == 'image')
+              {
+                magicSelector.attr('src', magic_definition[index].variations[parseInt(randVar)]).attr('srcset', magic_definition[index].variations[parseInt(randVar)]);
+              }
+              experimentVariation = 'magic-' + randVar;
+            });
+          }
+
+        if(variation_element)     
+          variation_element.addClass('bt-show-variation'); 
+
+
+        /// if its magic or on page, then set up visible listeners
+        if(bt_experiments[experimentId]['test_type'] == 'ab_test')
+        {
+          watch_for_tag_event(experimentId, undefined, experimentVariation);
+        }
+        else if (bt_experiments[experimentId]['test_type'] == 'magic')
+        {
+          //loop through the magic elements and watch for them
+          magic_definition.forEach((element, index) => {
+            watch_for_tag_event(experimentId,element.selector, experimentVariation); // watch 4 visible instead of insta visit
+          });
+        }
+        else
+        {
+          bt_experiment_w(experimentId,experimentVariation,'visit', redirect_url);
+        }
+        
+
+      });
+    }
+
+    // warn users on localhost
+    if(btIsLocalhost())
+      console.info("AB Split Test: It looks like you're on a localhost, using local storage instead of cookies. External Conversion Pixels will not work on Local web servers.");
+    
+    abst_find_analytics();
+    window.dispatchEvent(new Event('resize')); // trigger a window resize event. Useful for sliders etc. that dynamically resize
+    jQuery('body').trigger('ab-test-setup-complete'); // the end of the ab testing. do other things if you like with   jQuery('body').bind('ab-test-setup-complete', function() {    //do what you want! });
+    //add class ab-test-setup-complete to body
+    document.body.classList.add('ab-test-setup-complete');
+});
+
+function startTextWatcher(experimentId,word,goalId = null){
+ 
+  if(!goalId)
+    goalId = 0;
+
+  if (typeof abst.intervals[experimentId] === 'undefined') {
+    abst.intervals[experimentId] = {};
+  }
+
+  window.abst.intervals[experimentId][goalId] = setInterval(function () {
+    let found = false;
+    var escapedWord = word.replace(/'/g, "\\'"); // Escape single quotes
+    
+    
+    // Search within the main page more efficiently
+    jQuery("body").find(":contains('" + escapedWord + "')").each(function () {
+      if (jQuery(this).text().indexOf(word) >= 0 && jQuery(this).is(":visible")) {
+        found = true;
+        return false; // Break the loop
+      }
+    });
+  
+    if (!found) {
+      jQuery("iframe").each(function () {
+        try {
+          var iframeBody = jQuery(this).contents().find("body");
+          found = iframeBody.find(":contains('" + escapedWord + "')").filter(function () {
+            return jQuery(this).text().indexOf(word) >= 0 && jQuery(this).is(":visible");
+          }).length > 0;
+  
+          if (found){
+            console.log('ABST: ' + experimentId + ' ' + word);
+            return false; // Break the loop
+          } 
+        } catch (error) {
+          //console.error("Error accessing iframe contents:", error);
+        }
+      });
+    }
+  
+      if(found){
+        if(goalId == 0)
+        {
+          abstConvert(experimentId);
+        }
+        else
+        {  
+          abstGoal(experimentId,goalId);
+        }
+        clearInterval(window.abst.intervals[experimentId][goalId]); // Stop the interval after finding the word
+      }
+    }, 1000);
+  }
+  
+
+  function abstConvert(testId = '',orderValue = 1){
+    console.log('abstConvert',testId,orderValue);
+    if(testId !== '')
+    {
+      var btab = abstGetCookie('btab_'+ testId);
+       if(btab)
+       {
+          btab = JSON.parse(btab);
+          if(btab.conversion == 0)
+          {
+            bt_experiment_w(testId,btab.variation,'conversion',false,orderValue);
+            btab.conversion = 1;
+            experiment_vars = JSON.stringify(btab);
+            abstSetCookie('btab_'+ testId, experiment_vars, 1000);   
+            if(abst.intervals[testId]){
+              clearInterval(abst.intervals[testId]);
+            }
+          }
+          else
+          {
+            console.log("ABST: " +bt_experiments[testId].name + ': Visitor has already converted');
+          }
+       }
+       else
+       {
+        if(!bt_experiments[testId])
+          console.log("ABST: " +'Test ID not found or test not active');
+       }
+    }
+  }
+
+  function abstGoal(testId = '',goal = ''){
+    //    console.log('start abstGoal',testId,goal);
+    if(testId !== '' && goal !== '')
+    {
+      var btab = abstGetCookie('btab_'+ testId);
+       if(btab)
+       {
+          btab = JSON.parse(btab);
+          //console.log('btab',btab);
+          if(btab.conversion !== 1) // no goals after conversion
+          {
+            if(Array.isArray(btab.goals))
+            {
+              //if its not in the goal
+              if(btab.goals[goal] !== 0)
+              {
+                btab.goals[goal] = 1; 
+                bt_experiment_w(testId,btab.variation,goal,false,1);
+              }
+              
+              experiment_vars = JSON.stringify(btab);
+              abstSetCookie('btab_'+ testId, experiment_vars, 1000);
+              if(abst.intervals[testId+""+goal])
+              {
+                clearInterval(abst.intervals[testId+""+goal]);
+              }
+            }
+            else
+            {
+              console.log("ABST: " +bt_experiments[testId].name + ': Visitor has already goaled');
+            }
+          } 
+          //else
+            //console.log('no goals after conversion');
+       }
+       else
+       {
+        if(!bt_experiments[testId])
+          console.log("ABST: " +'Test ID not found or test not active');
+       }
+    }
+  }
+    
+function showSkippedVisitorDefault(eid,createCookie = false,variation = false){
+  if(!window.bt_experiments[eid]){ // if no experiment, show first variations
+    
+      btv = jQuery('*[bt-eid=\"'+eid+'\"]').first().attr('bt-variation');
+      jQuery('*[bt-eid=\"'+eid+'\"][bt-variation=\"'+btv+'\"]').addClass('bt-show-variation');
+      return true;
+  }
+
+  if(variation && eid) // if we have a variation passed, just do it
+  {
+    if(bt_experiments[eid].test_type == "css_test") // css version 1
+    {
+      jQuery("body").addClass(variation); // add 1 class
+    }
+    else if (bt_experiments[eid].test_type == "full_page") // full page
+    {
+      url = bt_experiments[eid].page_variations[variation];
+      if(url !== undefined)
+      {
+        window.location.replace( abRedirectUrl(url) ); // follow the link w search params
+        return true;
+      }
+      else
+      {
+        console.log('No matching page found, must be default page no redirect.');
+        //add show class to page
+        document.body.classList.add('abst-show-page');
+        return false;
+      }
+    }
+    else if (bt_experiments[eid].test_type == "magic")
+    {
+      console.log('magic test, showing ver ' + variation);
+      // Clean up the variation string and get the letter
+      const letter = variation.replace('Variation ','').replace('(Original)','').trim().toLowerCase();
+      
+      // Safety check - make sure we have a single letter
+      if (letter.length !== 1 || !/[a-z]/.test(letter)) {
+        console.error('Invalid variation format:', variation);
+        return false;
+      }
+      
+      // Convert letter to index (a=0, b=1, etc)
+      const magVar = letter.charCodeAt(0) - 'a'.charCodeAt(0);
+      
+      // Verify the index is in valid range
+      if (magVar < 0 || magVar > 25) {
+        console.error('Invalid variation letter:', letter);
+        return false;
+      }
+      
+      showMagicTest(eid, magVar);
+    }
+    else // on page
+    {
+      jQuery('*[bt-eid=\"'+eid+'\"][bt-variation=\"'+variation+'\"]').addClass('bt-show-variation');
+    }
+    abstShowPage();
+    if(createCookie)
+    {
+      skippedCookie(eid,variation);
+    }
+    return true;
+  }
+
+  if(bt_experiments[eid].test_winner !== ''){ // if we have a winner
+
+    if(bt_experiments[eid].test_type =="full_page") // full page winner
+    {
+      url = bt_experiments[eid].page_variations[bt_experiments[eid].test_winner];
+      if(url !== undefined)
+      {
+        window.location.replace( abRedirectUrl(url) ); // follow the link w search params
+
+        return true;
+      }
+      else
+      {
+        console.log("ABST: " +'Full page test complete without matching page winner. Showing current page.');
+      }
+      abstShowPage();
+    }
+
+    if(bt_experiments[eid].test_type == "css_test") // css winner
+    {
+      console.log('css test winner, showing ver ' + bt_experiments[eid]['test_winner']);
+      jQuery("body").addClass('test-css-'+eid+'-'+bt_experiments[eid]['test_winner']); // add winning class
+      return true; // next
+    }
+
+    if(bt_experiments[eid].test_type == "magic") // magic winner
+    {
+      console.log('magic test winner, showing ver ' + bt_experiments[eid]['test_winner']);
+      showMagicTest(eid, bt_experiments[eid]['test_winner']);
+      return true; // next
+    }
+  }
+
+  if(bt_experiments[eid].test_type == "full_page")
+  {
+    abstShowPage();
+    if(createCookie)
+      skippedCookie(eid,bt_experiments[eid].full_page_default_page);
+
+    return true; // next
+  }
+
+  if(bt_experiments[eid].test_type == "css_test") // css version 1
+  {
+    jQuery("body").addClass('test-css-'+eid+'-1'); // add 1 class
+    if(createCookie)
+      skippedCookie(eid,'test-css-'+eid+'-1');
+    return true; // next
+  }
+  
+  //on page tests only from here
+  
+  if(!eid)
+    return;
+  var foundSpecial = false;
+  jQuery('*[bt-eid=\"'+eid+'\"]').each(function(index, element){
+    var variationName = jQuery(element).attr('bt-variation').toLowerCase();
+    var defaultNames = ["original","one","1","default","standard","a","control"];
+    if(defaultNames.includes(variationName))
+    {
+      btv = variationName;
+      jQuery(element).addClass('bt-show-variation'); // show the matched element
+      foundSpecial = true;
+    }
+  });
+    if(!foundSpecial){
+      btv = jQuery('*[bt-eid=\"'+eid+'\"]').first().attr('bt-variation');
+      jQuery('*[bt-eid=\"'+eid+'\"][bt-variation=\"'+btv+'\"]').addClass('bt-show-variation');
+  }
+
+  if(createCookie)
+    skippedCookie(eid,btv);
+ 
+}
+function skippedCookie(eid,btv){
+    var experiment_vars = {
+      eid: eid,
+      variation: btv,
+      conversion: 1,
+      skipped:1
+    };
+    experiment_vars = JSON.stringify(experiment_vars);
+    abstSetCookie('btab_'+ eid, experiment_vars, 1000);
+    return true;
+}
+
+//takes input slug or url and ends url suitable for window/replace
+function abRedirectUrl(url){
+
+  url = url + window.location.search + window.location.hash;
+  // if it starts with http/s dop nothing
+  if(url.startsWith('http') || url.startsWith('/'))
+    return url;
+  else
+    return '/' + url;
+  
+}
+
+function abstOneSecond(){
+  if(Object.keys(window.abst.timer).length > 0)
+  {
+    Object.entries(window.abst.timer).forEach(([ index,item]) => {
+      if(window.abst.timer[index] > -1) // dont decrease below -1
+        window.abst.timer[index] = window.abst.timer[index] - 1;
+
+      if(window.abst.timer[index] == 0){  // convert if its counted down, only fired once
+
+        //console.log('time active converting ' + index);
+        //index could be goal-eid-goalid
+        if(index.includes('goal-'))
+        {
+          var parts = index.split('-');
+          abstGoal(parts[1],parts[2]);
+        }
+        else
+          abstConvert(index);
+      
+      }
+    });
+
+    // update localstorage
+    localStorage.setItem('absttimer', JSON.stringify(window.abst.timer)); // localstorage need strings
+  }
+}
+
+
+
+function userActiveNow(){
+  window.abst.currscroll = window.scrollY; // update last known scroll n mouse
+  window.abst.abactive = true; // we active
+  clearTimeout(window.abst.timeoutTimer); // delete the old timout
+  window.abst.timeoutTimer = setTimeout(abstActiveTimeout, window.abst.timeoutTime); // create new timeout
+}
+
+function abstActiveTimeout(){
+  window.abst.abactive = false;
+}
+
+
+function getRandomInt(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function abstSetCookie(c_name, value, exdays) {
+  if(btIsLocalhost())
+    return btSetLocal(c_name, value);
+
+    var hostname = window.location.hostname;
+    var domain = hostname.replace(/^www\./, '').split('.').slice(-2).join('.');
+    domain = '.' + domain;
+
+    var exdate = new Date();
+    exdate.setDate(exdate.getDate() + exdays);
+    var c_value = escape(value) + ((exdays == null) ? '' : ';path=/; expires=' + exdate.toUTCString()) + "; SameSite=None; Secure; domain=" + domain;
+
+    document.cookie = c_name + '=' + c_value;
+}
+function deleteCookie(c_name) {
+      if(btIsLocalhost())
+        return btDeleteLocal(c_name);
+
+    document.cookie = c_name+"= ; expires = Thu, 01 Jan 1970 00:00:00 GMT";
+}
+
+function abstGetCookie(c_name) {
+    if(btIsLocalhost())
+      return btGetLocal(c_name);
+
+    var i, x, y, ARRcookies = document.cookie.split(';');
+    for (i = 0; i < ARRcookies.length; i++) {
+        x = ARRcookies[i].substr(0, ARRcookies[i].indexOf('='));
+        y = ARRcookies[i].substr(ARRcookies[i].indexOf('=') + 1);
+        x = x.replace(/^\s+|\s+$/g, '');
+        if (x == c_name) {
+            return unescape(y);
+        }
+    }
+}
+
+function abstShowPage(){
+  jQuery("body").addClass('abst-show-page');
+  jQuery("body",parent.window.document).addClass('abst-show-page'); // bb iframe UI
+}
+
+function btSetLocal(c_name,value){
+    localStorage.setItem(c_name, value);
+}
+
+function btGetLocal(c_name){
+  return localStorage.getItem(c_name);
+}
+
+function btDeleteLocal(c_name){
+  localStorage.removeItem(c_name);
+}
+
+function btIsLocalhost(){
+  return (location.hostname === "localhost" || location.hostname === "127.0.0.1"|| location.hostname.endsWith(".local")|| location.hostname.endsWith(".test"));
+}
+
+function bt_get_variations(eid){
+  
+  variation = [];
+  jQuery('[bt-eid=' + eid + ']').each(function (index, val) {
+    var newVariation = jQuery(this).attr('bt-variation');
+    
+    // Check if the variation already exists in the array
+    if (variation.indexOf(newVariation) === -1) {
+      variation.push(newVariation);
+    }
+  });
+
+  if(btab_vars.is_free == '1')
+  {
+    //only return first 2 variations
+    variation = variation.slice(0,2);
+  }
+
+  return variation;
+}
+
+function bt_experiment_w(eid,variation,type, url,orderValue=1){
+
+  // dont log it if its a skipper or malformed
+  if(variation == '_bt_skip_' || btab_vars.is_preview || !eid || !variation)
+  {
+    return true;
+  }
+
+  // if its a fingerprinter and we dont have a uuid, then wait for it
+  if(bt_experiments[eid].conversion_page == 'fingerprint' && !localStorage.getItem('ab-uuid'))
+  {
+    console.log("bt_exp_w: waiting for fingerprint");
+    setTimeout(bt_experiment_w, 500, eid, variation, type, url,orderValue);
+    return true; //back in 500ms
+  }
+  
+  var data = {
+    'action': 'bt_experiment_w',
+    'eid'  : eid,   
+    'variation'  : variation,   
+    'type'  : type,
+    'size'  : abst.size,
+    'location' : btab_vars.post_id,
+    'orderValue': orderValue
+  };
+
+  var experiment_vars = {
+    eid: eid,
+    variation: variation,
+    conversion: 0,
+    goals:[],
+  };
+
+//todo mote to on seen watcher
+  //visit time watcher
+  if( type == 'visit' && bt_experiments[eid]['conversion_page'] == 'time')
+  {
+    window.abst.timer[eid] = bt_experiments[eid]['conversion_time'];
+  }
+  //goal time watcher
+  if( type == 'visit')
+  {
+    // console.log(bt_experiments[eid]['goals']);
+    //foreach goals 
+    jQuery.each(bt_experiments[eid]['goals'], function(key, value) {
+      // if valuee.time is set
+      if(value['time'] > 0)
+      {
+        window.abst.timer["goal-"+eid + "-"+key] = value['time'];
+      }
+    });
+  }
+
+  // set up conversion
+  if( type == 'conversion' ) 
+    experiment_vars.conversion = 1;
+  else if ( type == 'visit' )
+  {
+    // not conversion or goal
+  }
+  else // goal
+  {
+    experiment_vars.goals[type] = 1; // add to goals list
+  }
+
+
+  //add uuid if necessary
+  if( bt_experiments[eid]['conversion_page'] == 'fingerprint')
+    data.uuid = localStorage.getItem('ab-uuid');
+
+
+  //add advanced id if necessary
+  if( btab_vars.advanced_tracking == '1' )
+    data.ab_advanced_id = localStorage.getItem('ab-advanced-id');
+
+  experiment_vars = JSON.stringify(experiment_vars);
+    // For non-redirect events, check if we're waiting for approval
+  if (window.abst.waitForApproval) {
+    queueEventData(data, url);
+  } else {
+    // Process normally if not waiting for approval
+    // Send beacon
+    console.log('sent beacon', navigator.sendBeacon(bt_ajaxurl+"?action=bt_experiment_w&method=beacon", JSON.stringify(data)));
+  }
+  abstSetCookie('btab_'+ eid, experiment_vars, 1000);      
+  //show the page if its not a redirect or external
+  if(url && url !== "ex")
+    {
+      addServerEvents({
+        eid: eid,
+        variation: variation,
+        type: 'visit',
+      });
+      window.location.replace(abRedirectUrl(url));
+    }
+    else
+    {
+    btab_track_event(data); // analytics tagger    
+    abstShowPage(); // show the page
+  }
+
+  return true;
+}
+
+/**
+ * Helper function to queue event data in localStorage
+ */
+function queueEventData(data, url) {
+  // Add to queue in localStorage
+  const queueData = {
+    data: data,
+    timestamp: new Date().getTime(),
+    url: url
+  };
+  
+  // Get existing queue or initialize empty array
+  let queue = [];
+  try {
+    const queueString = localStorage.getItem('abstTestDataQueue');
+    if (queueString) {
+      queue = JSON.parse(queueString);
+    }
+  } catch (e) {
+    console.error('Error parsing abstTestDataQueue', e);
+  }
+  
+  // Add new item to queue
+  queue.push(queueData);
+  
+  // Save updated queue
+  localStorage.setItem('abstTestDataQueue', JSON.stringify(queue));
+  
+  console.log('Event queued for approval', queueData);
+}
+
+/**
+ * Process events when approval is given
+ * This function should be called when cookie consent or other approval is given
+ */
+function abst_process_approved_events() {
+  // Set approval flag to true and save to localStorage
+  setAbstApprovalStatus(true);
+  
+  // Get queued events
+  let queue = [];
+  try {
+    const queueString = localStorage.getItem('abstTestDataQueue');
+    if (queueString) {
+      queue = JSON.parse(queueString);
+    }
+  } catch (e) {
+    console.error('Error parsing abstTestDataQueue', e);
+    return false;
+  }
+  
+  if (!queue.length) {
+    console.log('No queued events to process');
+    return true;
+  }
+  
+  console.log('Processing ' + queue.length + ' queued events');
+  
+  // Process each queued event
+  queue.forEach(queueItem => {
+    // Track the event
+    btab_track_event(queueItem.data);
+    
+    // Send beacon for the event
+    console.log('Sending queued beacon', queueItem.data);
+    console.log(navigator.sendBeacon(bt_ajaxurl+"?action=bt_experiment_w&method=beacon", JSON.stringify(queueItem.data)));
+  });
+  
+  // Clear the queue
+  localStorage.removeItem('abstTestDataQueue');
+  
+  return true;
+}
+
+/**
+ * Track an event
+ * This function is used to track events in the analytics partners
+ * @param {Object} data - The event data
+ * @param {string} data.eid - The experiment ID
+ * @param {string} data.variation - The variation
+ * @param {string} data.type - The event type
+ */
+async function btab_track_event(data){
+
+  //create javascript event with data 
+  jQuery('body').trigger('abst_event', [data]);
+  
+  if(btab_vars.is_free == '1')
+    return false;
+
+  if(btab_vars.tagging == '0'){
+    //console.log('event tagging turned off');
+    return false;
+  }
+
+  window.abst.eventQueue.push(data);
+
+  trackName = bt_experiments[data.eid].name || data.eid;
+  //gtag always
+  gtm_data = {
+    'event': 'ab_split_test',
+    'test_name': trackName,
+    'test_variation': data.variation,
+    'test_event': data.type,
+    'test_id': data.eid,
+  };
+  if( bt_experiments[data.eid]['conversion_page'] == 'fingerprint')
+    gtm_data.abuuid = localStorage.getItem('ab-uuid');
+  else if(localStorage.getItem('ab-advanced-id'))
+    gtm_data.abuuid = localStorage.getItem('ab-advanced-id');
+  
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push(gtm_data); // add to gtm data layer
+
+  if(window.abst.abconvertpartner.ga4) //ga4 add
+    gtag('event',  'ab_split_test', {
+      'test_name': data.eid,
+      'test_variation': data.variation,
+      'test_event': data.type,
+    });
+  
+
+  if(window.abst.abconvertpartner.abawp){ //analyticswp
+    AnalyticsWP.event('Test: ' + bt_experiments[data.eid].name, {
+      test_id: data.eid,
+      test_name: bt_experiments[data.eid].name,
+      test_variation: data.variation,
+      test_visit_type: data.type
+    });
+  }
+
+  if(window.abst.abconvertpartner.clarity){ //clarity
+    clarity("set", bt_experiments[data.eid].name + "-" + data.type, data.variation);
+  }  
+
+  if(window.abst.abconvertpartner.gai){ //google analytics
+    tracker = ga.getAll()[0];
+    if (tracker)
+    {
+        tracker.send("event", bt_experiments[data.eid].name, data.type, data.variation,{nonInteraction: true}); // send non interactive event to GA
+        window.abst.abconvertpartner.gai = true;
+    }
+  }
+
+  if(window.abst.abconvertpartner.abmix){ //abmix
+    mixpanel.track(bt_experiments[data.eid].name, {'type': data.type,'variation':data.variation}, {send_immediately: true});
+  }
+
+  if(window.abst.abconvertpartner.abumav){ //umami
+    usermaven("track", bt_experiments[data.eid].name, {
+      type: data.type,
+      variation: data.variation
+    });
+    
+  }
+
+  if(window.abst.abconvertpartner.umami){ //umami
+    umami.track(bt_experiments[data.eid].name, {
+      type: data.type,
+      variation: data.variation
+    });
+  }
+
+  if(window.abst.abconvertpartner.cabin){ //cabin
+    cabin.event(bt_experiments[data.eid].name + ' | ' + data.type + ' | ' + data.variation);
+  }
+
+  if(window.abst.abconvertpartner.plausible){ //plausible
+    plausible(bt_experiments[data.eid].name, {
+      props: {
+        type: data.type,
+        variation: data.variation
+      }
+    });
+  }
+
+  if(window.abst.abconvertpartner.fathom){ //fathom
+    fathom.trackGoal(bt_experiments[data.eid].name, {
+      type: data.type,
+      variation: data.variation
+    });
+  }
+  if(window.abst.abconvertpartner.posthog){
+    posthog.capture(bt_experiments[data.eid].name, {
+      type: data.type,
+      variation: data.variation
+    });
+  }
+}
+
+function abst_find_analytics(){
+  if(btab_vars.is_free == '1')
+    return false;
+
+  window.abeventstarted = new Date().getTime();
+
+  window.dataLayer || (window.dataLayer = []); //gtag
+  
+  // Define all analytics providers we want to check for
+  const analyticsProviders = [
+    {
+      name: 'ga4',
+      check: () => typeof gtag === "function",
+      process: () => {
+        window.abst.eventQueue.forEach(element => {
+          gtag('event',  'ab_split_test', {
+            'test_name': bt_experiments[element.eid].name,
+            'test_variation': element.variation,
+            'test_event': element.type,
+            'ab_uuid': element.uuid,
+          });
+        });
+      }
+    },
+    {
+      name: 'clarity',
+      check: () => typeof clarity === "function",
+      process: () => {
+        window.abst.eventQueue.forEach(element => {
+          clarity("set", element.eid + "-" + element.type, element.variation);
+        });
+      }
+    },
+    {
+      name: 'gai',
+      check: () => {
+        if (typeof ga === "function") {
+          const tracker = ga.getAll()[0];
+          return !!tracker;
+        }
+        return false;
+      },
+      process: () => {
+        const tracker = ga.getAll()[0];
+        window.abst.eventQueue.forEach(element => {
+          tracker.send("event", element.eid, element.type, element.variation, {nonInteraction: true});
+        });
+      }
+    },
+    {
+      name: 'fathom',
+      check: () => !!window.fathom,
+      process: () => {
+        window.abst.eventQueue.forEach(element => {
+          window.fathom.trackEvent(element.eid + ", " + element.type + ": " + element.variation);
+        });
+      }
+    },
+    {
+      name: 'posthog',
+      check: () => !!window.posthog,
+      process: () => {
+        window.abst.eventQueue.forEach(element => {
+          posthog.capture(bt_experiments[element.eid].name, {
+            type: element.type,
+            variation: element.variation
+          });
+        });
+      }
+    },
+    {
+      name: 'abmix',
+      check: () => typeof mixpanel === "object",
+      process: () => {
+        window.abst.eventQueue.forEach(element => {
+          mixpanel.track(bt_experiments[element.eid].name, {'type': element.type,'variation':element.variation}, {send_immediately: true});
+        });
+      }
+    },
+    {
+      name: 'abumav',
+      check: () => typeof usermaven === "function",
+      process: () => {
+        window.abst.eventQueue.forEach(element => {
+          usermaven("track", bt_experiments[element.eid].name, {
+            type: element.type,
+            variation: element.variation
+          });
+        });
+      }
+    },
+    {
+      name: 'umami',
+      check: () => !!window.umami,
+      process: () => {
+        window.abst.eventQueue.forEach(element => {
+          umami.track(bt_experiments[element.eid].name, {
+            type: element.type,
+            variation: element.variation
+          });
+        });
+      }
+    },
+    {
+      name: 'cabin',
+      check: () => !!window.cabin,
+      process: () => {
+        window.abst.eventQueue.forEach(element => {
+          cabin.event(bt_experiments[element.eid].name + ' | ' + element.type + ' | ' + element.variation);
+        });
+      }
+    },
+    {
+      name: 'plausible',
+      check: () => !!window.plausible,
+      process: () => {
+        window.abst.eventQueue.forEach(element => {
+          plausible(bt_experiments[element.eid].name, {
+            props: {
+              type: element.type, 
+              variation: element.variation
+            }
+          });
+        });
+      }
+    },
+    {
+      name: 'abawp',
+      check: () => typeof AnalyticsWP === "object",
+      process: () => {
+        window.abst.eventQueue.forEach(element => {
+          AnalyticsWP.event('Test: ' + bt_experiments[element.eid].name, {
+            test_id: element.eid,
+            test_name: bt_experiments[element.eid].name,
+            test_variation: element.variation,
+            test_visit_type: element.type
+          });
+        });
+      }
+    }
+  ];
+
+  // Initialize partner object if not exists
+  window.abst.abconvertpartner = window.abst.abconvertpartner || {};
+  
+  // Maximum time to wait for analytics providers (in milliseconds)
+  const MAX_WAIT_TIME = 10000; // 10 seconds
+  const CHECK_INTERVAL = 500; // Check every 500ms
+  
+  // Function to check a single analytics provider
+  const checkProvider = (provider) => {
+    // Skip if already processed
+    if (window.abst.abconvertpartner[provider.name]) {
+      return true;
+    }
+    
+    // Check if provider is available
+    if (provider.check()) {
+      window.abst.abconvertpartner[provider.name] = true;
+      provider.process();
+      return true;
+    }
+    
+    return false;
+  };
+  
+  // Function to check all providers
+  const checkAllProviders = () => {
+    return analyticsProviders.map(provider => checkProvider(provider));
+  };
+  
+  // Start time to calculate timeout
+  const startTime = new Date().getTime();
+  
+  // Create a promise that resolves when all providers are found or timeout
+  const findAnalyticsPromise = new Promise((resolve) => {
+    const checkAnalytics = () => {
+      // Check all providers
+      const results = checkAllProviders();
+      
+      // If all providers are found or we've exceeded the max wait time, resolve
+      const allFound = results.every(result => result === true);
+      const timeElapsed = new Date().getTime() - startTime;
+      
+      if (allFound || timeElapsed > MAX_WAIT_TIME) {
+        resolve();
+      } else {
+        // Check again after interval
+        setTimeout(checkAnalytics, CHECK_INTERVAL);
+      }
+    };
+    
+    // Start checking
+    checkAnalytics();
+  });
+  
+  // Return the promise for potential chaining
+  return findAnalyticsPromise;
+}
+
+// check for a full page test visit cookie
+function bt_getQueryVariable(variable) {
+  var query = window.location.search.substring(1);
+  var vars = query.split("&");
+  for (var i=0;i<vars.length;i++) {
+    var pair = vars[i].split("=");
+    if(pair[0] == variable){
+      if(pair[1] == null)
+        return true;
+      return pair[1];
+    }
+  }
+  return(false);
+}
+
+if (!String.prototype.endsWith) {
+  String.prototype.endsWith = function(search, this_len) {
+    if (this_len === undefined || this_len > this.length) {
+      this_len = this.length;
+    }
+    return this.substring(this_len - search.length, this_len) === search;
+  };
+}
+
+
+
+//function to find and replace strings uin document, including strings with formatting like strong em, etc
+function bt_replace_all(find, replace, location = 'body') {
+  // Get the element by the provided location
+  const element = document.querySelector(location);
+  
+  // Function to recursively replace text
+  function replaceText(node) {
+      if (node.nodeType === Node.TEXT_NODE) { // Check if it's a text node
+          // Replace text, preserving HTML entities by decoding and encoding
+          let text = node.textContent;
+          let div = document.createElement('div');
+          div.innerHTML = text.replace(new RegExp(find, 'gi'), replace);
+          node.textContent = div.textContent || div.innerText || "";
+      } else {
+          // Otherwise, handle all its children nodes
+          node.childNodes.forEach(replaceText);
+      }
+  }
+
+  // Start the text replacement process from the chosen element
+  replaceText(element);
+}
+
+// Usage example:
+//bt_replace_all('find text', 'replace text');
+
+function bt_replace_all_html(find, replace, location = 'body') {
+  // Get the element by the provided location
+  const element = document.querySelector(location);
+  
+  // Function to recursively replace HTML
+  function replaceHTML(node) {
+      if (node.nodeType === Node.ELEMENT_NODE) { // Check if it's an element node
+          // Replace HTML, preserving the node structure
+          node.innerHTML = node.innerHTML.split(find).join(replace);
+      } else {
+          // Otherwise, handle all its children nodes
+          node.childNodes.forEach(replaceHTML);
+      }
+  }
+
+  // Start the HTML replacement process from the chosen element
+  replaceHTML(element);
+}
+
+function abClickListener(experimentId,conversionSelector, goalId = 0) {
+  var testCookie = abstGetCookie('btab_'+experimentId);
+  if(testCookie)
+  {
+    testCookie = JSON.parse(testCookie);
+    if(goalId == 0)
+    {
+      if(testCookie.conversion == 1)
+      {
+        //console.log('abClickListener: already converted');
+        return;
+      }
+    }
+    else // issa goal
+    {
+      if(testCookie.goals[goalId] == 1)
+      {
+        //console.log('abClickListener: goal already converted');
+        return;
+      }      
+    }
+  }
+  var eventType = 'click'; // Default event type
+  // If a pipe symbol exists, split it into the conversion selector and the event type
+  if(conversionSelector.indexOf('|') !== -1) {
+      var conversionParts = conversionSelector.split('|');  
+      // Check if there are at least two conversionParts
+      if(conversionParts.length >= 2) {
+          conversionSelector = conversionParts[0]; // First part is the conversion selector
+          eventType = conversionParts[1]; // Second part is the event type
+      }
+  }
+
+  try {
+    // Listen for clicks on elements matching the class selector
+    document.addEventListener(eventType, function(event) {
+      var target = event.target;
+      while (target && target !== document) {
+        if (target.matches(conversionSelector)) {
+          //console.log(eventType + ' conversion on ' + conversionSelector + ' type ' + goalId);
+          if(goalId > 0)
+            abstGoal(experimentId,goalId);
+          else
+            abstConvert(experimentId);
+          break;
+        }
+        target = target.parentNode;
+      }
+    }, true);
+
+    // Listen for clicks on any links with ab-click-convert- query parameter
+    document.addEventListener('click', function(event) {
+      var target = event.target;
+      while (target && target !== document) {
+        if (target.tagName === 'A' && target.href) {
+          try {
+            var url = new URL(target.href);
+            var params = new URLSearchParams(url.search);
+            
+            // Check for the ab-click-convert-ID parameter
+            for (const [key, value] of params.entries()) {
+              if (key.startsWith('ab-click-convert-')) {
+                var linkExperimentId = key.replace('ab-click-convert-', '');
+                if (linkExperimentId === experimentId) {
+                  event.preventDefault(); // Prevent default link behavior
+                  console.log('Query string conversion for experiment ID: ' + experimentId);
+                  if(goalId > 0)
+                    abstGoal(experimentId, goalId);
+                  else
+                    abstConvert(experimentId);
+                  
+                  // Continue to the link after a short delay to allow conversion to be processed
+                  setTimeout(function() {
+                    window.location.href = target.href;
+                  }, 300);
+                  break;
+                }
+              }
+            }
+          } catch (e) {
+            // Invalid URL, just continue
+          }
+        }
+        target = target.parentNode;
+      }
+    }, true);
+  } catch(error) {
+    console.info('ABST: Invalid conversion selector:' +  conversionSelector + ' ' + error + ' ' + goalId); 
+  }
+  var iframes = document.querySelectorAll('iframe');
+  iframes.forEach(function(iframe) {
+  try {
+    var iframeDoc = iframe.contentWindow.document;
+    iframeDoc.addEventListener(eventType, function(event) {
+      if (event.target.matches(conversionSelector)) {
+        console.log(eventType + ' IFRAME conversion on ' + conversionSelector);
+        abstConvert(experimentId);
+      }
+    }, true);
+  } catch (error) {
+    //console.error("Error accessing cross-origin iframe:", error); // CORS issue, the iframe is not in the same origin and does not allow cross origin access.
+  }
+  });
+}
+async function setAbFingerprint() {
+  if(!localStorage.getItem("ab-uuid")){
+    try {
+      const module = await import(window.bt_pluginurl + "/js/ab-fingerprint.js");
+      const fp = await ThumbmarkJS.getFingerprint();
+      localStorage.setItem("ab-uuid", fp);
+      console.log("set Fingerprint: " + fp);
+    } catch (error) {
+      console.error("Error setting fingerprint:", error);
+    }
+  }
+  else{
+    console.log("ab-uuid: already set: " + localStorage.getItem("ab-uuid"));
+  }
+}
+async function setAbCrypto() {
+  if(!localStorage.getItem("ab-advanced-id")){
+      let fp;
+    try {
+      fp = crypto.randomUUID();
+      console.log("Set advanced id: " + fp);
+    } catch (e) { // localhost, http
+      fp = "10000000-1000-4000-8000-100000000000".replace(/[018]/g, c => (+c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> +c / 4).toString(16));
+      console.log("Set advanced ID: " + fp);
+    }
+    localStorage.setItem("ab-advanced-id", fp);
+    //set cookie same
+    document.cookie = "ab-advanced-id=" + fp + "; SameSite=None; Secure;";
+  }
+  else{
+    console.log("ab-advanced-id: already set: " + localStorage.getItem("ab-advanced-id"));
+  }
+}
+
+/**
+ * Revoke approval for tracking (for testing or when user revokes consent)
+ */
+function abst_revoke_approval() {
+  setAbstApprovalStatus(false);
+  console.log('Approval revoked, events will be queued until approval is given again');
+  return true;
+}
+
+function showMagicTest(eid, index) { // called from magic bar so we arent logging anything
+  var magic_definition = JSON.parse(bt_experiments[eid].magic_definition);
+  //foreach 
+  jQuery.each(magic_definition, function(i, swapElement) {
+      if(swapElement.type == 'text')
+          jQuery(swapElement.selector).text(swapElement.variations[index]);
+      if(swapElement.type == 'image')
+          jQuery(swapElement.selector).attr('src', swapElement.variations[index]).attr('srcset', swapElement.variations[index]);
+  }); 
+  //scroll into view first element
+  jQuery('html, body').animate({
+    //scroll element to 1/3 down view
+    scrollTop: jQuery(magic_definition[0].selector).offset().top - window.innerHeight / 3
+  }, 1000);
+  // flash a box around the swAPPED ELEMENT FOR 2 SECONDS
+  jQuery(magic_definition[0].selector).addClass('ab-highlight');
+  setTimeout(function(){
+    jQuery(magic_definition[0].selector).removeClass('ab-highlight');
+  }, 3000);
+}
+
+
+
+window.btab_vars.checkVisibility = function() {
+  ensureVisibilityTrackerInitialized();
+  const tracker = window.btab_vars.visibility_tracker;
+  let hasActive = false;
+
+  Object.entries(tracker.elements).forEach(([ key, data ]) => {
+
+    const { eid, selector, variation } = data;
+    const exp = bt_experiments[eid];
+    const els = jQuery(selector);
+    //    console.log('[ABST DEBUG] Checking visibility for', { eid, selector, variation });
+//    console.log('[ABST DEBUG] Matched elements count:', els.length, 'for selector:', selector);
+let trulyVisible = false;
+
+els.each(function() {
+  let el = jQuery(this);
+  let isVisible = true;
+
+  // Traverse up the DOM tree
+  while (el.length && el[0].nodeType === 1) {
+    // Check for display:none, visibility:hidden, opacity:0
+    if (
+      el.css('display') === 'none' ||
+      el.css('visibility') === 'hidden' ||
+      parseFloat(el.css('opacity') || 1) === 0
+    ) {
+      isVisible = false;
+      break;
+    }
+    el = el.parent();
+  }
+
+  if (isVisible) {
+    trulyVisible = true;
+    //console.log('Element is truly visible for', { eid, selector, variation });
+    return false; // break out of .each
+  }
+});
+
+if (!trulyVisible) {
+  hasActive = true;
+  return; // skip to next
+}
+
+// —— ELEMENT IS VISIBLE! —— 
+// A) Fire the “visit” beacon immediately
+bt_experiment_w(eid, variation, 'visit', false);
+
+    // B) Start a time-based conversion timer (if applicable)
+    if (exp.conversion_page === 'time') {
+      window.abst.timer[eid] = exp.conversion_time;
+    }
+
+    // C) Wire up the primary conversion trigger for this experiment
+    switch (exp.conversion_page) {
+      case 'selector':
+        abClickListener(eid, exp.conversion_selector);
+        break;
+      case 'text':
+        startTextWatcher(eid, exp.conversion_text);
+        break;
+      case 'surecart-order-paid':
+        document.addEventListener('scOrderPaid', function(e) {
+          const amt = e.detail?.amount_due;
+          if (amt) {
+            if (exp.use_order_value) {
+              window.abst.abConversionValue = (amt/100).toFixed(2);
+            }
+            abstConvert(eid, window.abst.abConversionValue);
+          }
+        });
+        break;
+      // add other conversion_page types here as needed...
+    }
+
+    // D) Wire up any sub-goals
+    if (Array.isArray(exp.goals)) {
+      exp.goals.forEach((goalDef, idx) => {
+        const [ kind, value ] = Object.entries(goalDef)[0];
+        switch (kind) {
+          case 'selector':
+            abClickListener(eid, value, idx);
+            break;
+          case 'text':
+            startTextWatcher(eid, value, idx);
+            break;
+          case 'page':
+          case 'url':
+            // immediate page/url goals could fire here:
+            // if (normalizeUrl(location.href) === normalizeUrl(value)) {
+            //   abstGoal(eid, idx);
+            // }
+            break;
+        }
+      });
+    }
+
+    // remove from tracker so this only runs once
+    delete tracker.elements[key];
+  });
+
+  if (!hasActive && tracker.active) {
+    clearInterval(tracker.interval);
+    tracker.active = false;
+  }
+};
+
+// Add this at the top of the file or before any usage
+function ensureVisibilityTrackerInitialized() {
+  if (!window.btab_vars.visibility_tracker) {
+    window.btab_vars.visibility_tracker = {
+      elements: {},   // keyed by `${eid}_${selector}`
+      active: false,
+      interval: null
+    };
+  }
+}
+
+// Use this function in watch_for_tag_event and anywhere else you initialize the tracker
+function watch_for_tag_event(eid, selector = '[bt-eid="' + eid + '"]', variation = null) {
+  if (!variation) return;
+
+  ensureVisibilityTrackerInitialized();
+  const key = `${eid}_${selector}_${variation}`;
+  window.btab_vars.visibility_tracker.elements[key] = { eid, selector, variation };
+
+  if (!window.btab_vars.visibility_tracker.active) {
+    window.btab_vars.visibility_tracker.interval = setInterval(
+      window.btab_vars.checkVisibility,
+      500
+    );
+    window.btab_vars.visibility_tracker.active = true;
+  }
+}
+
+
+function normalizeUrl(url) {
+  page_url = url.replace(window.location.origin,'');
+  if (page_url.charAt(0) == "/") page_url = page_url.substr(1);
+  if (page_url.charAt(page_url.length - 1) == "/") page_url = page_url.substr(0, page_url.length - 1);
+
+  return page_url;
+}

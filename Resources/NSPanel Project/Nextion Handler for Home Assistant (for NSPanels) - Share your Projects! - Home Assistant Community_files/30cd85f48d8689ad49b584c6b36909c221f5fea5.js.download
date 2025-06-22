@@ -1,0 +1,10 @@
+"require"in window&&require("discourse/lib/theme-settings-store").registerSettings(15,{social_share_links:"reddit,fab-reddit-square,Share this link on reddit,https://www.reddit.com/r/homeassistant/submit?url=",svg_icons:"fab-reddit-square"}),"define"in window&&define("discourse/theme-15/discourse/initializers/initialize-for-social-share-links",["exports","discourse/lib/plugin-api"],(function(e,i){"use strict"
+Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0
+const t=require("discourse/lib/theme-settings-store").getObjectForTheme(15)
+e.default={name:"extend-for-social-share-links",initialize(){(0,i.withPluginApi)("0.8.23",(e=>{if(!t.social_share_links.length)return
+const i=t.social_share_links.split("|")
+for(let t=0;t<i.length;t++){const s=i[t].split(",")
+for(let e=0;e<s.length;e++)s[e]=s[e].trim()
+e.addSharingSource({id:s[0],icon:s[1].toLowerCase(),title:s[2],generateUrl:(e,i)=>s[3]+encodeURIComponent(e)+"&title="+encodeURIComponent(i),shouldOpenInPopup:!0,popupHeight:265})}}))}}}))
+
+//# sourceMappingURL=30cd85f48d8689ad49b584c6b36909c221f5fea5.map?__ws=community.home-assistant.io
