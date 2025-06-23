@@ -32,6 +32,7 @@ typedef struct struct_message {
   float Target_temp_Heat;
   bool Relay_Cool;
   bool Relay_Heat;
+  char UART_Data;
 } struct_message;
 
 // Create a struct_message called myData
@@ -41,6 +42,14 @@ unsigned long lastTime = 0;
 unsigned long timerDelay = 5000;  // send readings timer
 uint16_t msg_cnt = 0;
 char char_serial;
+
+void sendData() {
+    // Send message via ESP-NOW
+    digitalWrite(LED_BUILTIN, LOW);  // Turn the LED off by making the voltage HIGH
+    esp_now_send(broadcastAddress, (uint8_t *)&myData, sizeof(myData));
+    delay(50);
+    digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED on (Note that LOW is the voltage level
+}
 
 // Callback when data is sent
 void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
@@ -52,6 +61,21 @@ void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
   Serial.println( sendStatus == 0 ? "Delivery Success" : "Delivery Fail");
 }
 
+/* config AP SSID
+void configDeviceAP() {
+  String Prefix = "Slave:";
+  String Mac = WiFi.macAddress();
+  String SSID = Prefix + Mac;
+  String Password = "123456789";
+  bool result = WiFi.softAP(SSID.c_str(), Password.c_str(), CHANNEL, 0);
+  if (!result) {
+    Serial.println("AP Config failed.");
+  } else {
+    Serial.println("AP Config Success. Broadcasting with AP: " + String(SSID));
+  }
+} //*/
+
+
 void setup() {
   // Init Serial Monitor
   Serial.begin(115200); // 74880
@@ -62,14 +86,21 @@ void setup() {
   WiFi.mode(WIFI_STA);
   // Init ESP-NOW
   Serial.println("ESP-8266 Transmiter initialization...");
-   // This is the mac address of the Master in Station Mode
-  Serial.print("STA MAC: "); Serial.println(WiFi.macAddress());
   
-  if (esp_now_init() != 0) {
+  
+  // configure device AP mode
+  //configDeviceAP();  
+  
+   // This is the mac address of the Master in Station Mode
+  Serial.print("AP MAC: "); Serial.println(WiFi.macAddress());
+  if (esp_now_init() == ERR_OK) { Serial.println("ESP-Now Init Success");  }
+  else {
     Serial.println("Error initializing ESP-NOW");
-    return;
-  }
-
+    // Retry InitESPNow, add a counte and then restart?
+    // InitESPNow();
+    // or Simply Restart
+    ESP.restart();
+       }
   // Once ESPNow is successfully Init, we will register for Send CB to
   // get the status of Trasnmitted packet
   esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
@@ -77,17 +108,15 @@ void setup() {
 
   // Register peer
   //esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_SLAVE, CHANNEL, passkey, passkey_len);
-  Serial.println( esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_SLAVE, CHANNEL, passkey, passkey_len) == 0 ? "Peer add with succes" : "Failed to add peer");
+  Serial.println(esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_SLAVE, CHANNEL, passkey, passkey_len) == 0 ? "Peer add with succes" : "Failed to add peer");
 }
 
-void loop() {
 
+void loop() {
   if (Serial.available()) {        // If anything comes in Serial (USB),
     char_serial = Serial.read();  // read it and send it out Serial1 (pins 0 & 1)
 	Serial.print("Serial read: ");
 	Serial.println(char_serial);	
-  
-
     // Set values to send
     myData.message_cnt = msg_cnt;
     strcpy(myData.NSPanel_Name, "NSPanel Zone-");
@@ -98,18 +127,10 @@ void loop() {
     myData.Target_temp_Heat = 65.5;
     myData.Relay_Cool = true;
     myData.Relay_Heat = false;
-
-    // Send message via ESP-NOW
-    digitalWrite(LED_BUILTIN, LOW);  // Turn the LED off by making the voltage HIGH
-   // delay(100); 
-    esp_now_send(broadcastAddress, (uint8_t *)&myData, sizeof(myData));
-    delay(50); 
-    digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED on (Note that LOW is the voltage level
+    myData.UART_Data = char_serial;
+    sendData();
     msg_cnt++;
     //lastTime = millis();
     //delay(5000);
- 
   }
- 
- 
 }

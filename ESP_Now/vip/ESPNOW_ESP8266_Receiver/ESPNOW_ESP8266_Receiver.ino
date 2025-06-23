@@ -12,6 +12,11 @@
 #include <ESP8266WiFi.h>
 #include <espnow.h>
 
+
+#define CHANNEL 1
+#define passkey NULL
+#define passkey_len 0
+
 // Structure example to receive data
 // Must match the sender structure
 typedef struct struct_message {
@@ -24,13 +29,20 @@ typedef struct struct_message {
   float Target_temp_Heat;
   bool Relay_Cool;
   bool Relay_Heat;
+  char UART_Data;
 } struct_message;
 
 // Create a struct_message called myData
 struct_message myData;
 
 // Callback function that will be executed when data is received
-void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
+void OnDataRecv(uint8_t * mac_addr, uint8_t *incomingData, uint8_t len) {
+  
+  char macStr[18];
+  snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
+           mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
+  Serial.print("Last Packet Recv from: "); Serial.println(macStr); 
+  
   
   memcpy(&myData, incomingData, sizeof(myData));
   digitalWrite(LED_BUILTIN, LOW);  // Turn the LED off by making the voltage HIGH
@@ -52,6 +64,8 @@ void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
   Serial.println(myData.Relay_Cool);
   Serial.print("Relay Heat: ");
   Serial.println(myData.Relay_Heat);
+  Serial.print("UART Data: ");
+  Serial.println(myData.UART_Data);
   Serial.print("message count: ");
   Serial.println(myData.message_cnt);
   Serial.println();
@@ -64,15 +78,23 @@ void setup() {
   Serial.begin(115200); //
   Serial.println();
   pinMode(LED_BUILTIN, OUTPUT);  // Initialize the LED_BUILTIN pin as an output
+  WiFi.disconnect();  
   // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
 
   // Init ESP-NOW
   Serial.println("ESP-8266 Raceiver initialization...");
-  if (esp_now_init() != 0) {
+  // This is the mac address of the Master in Station Mode
+  Serial.print("STA MAC: "); Serial.println(WiFi.macAddress());
+  
+  if (esp_now_init() == ERR_OK) { Serial.println("ESP-Now Init Success"); }
+  else {
     Serial.println("Error initializing ESP-NOW");
-    return;
-  }
+    // Retry InitESPNow, add a counte and then restart?
+    // InitESPNow();
+    // or Simply Restart
+    ESP.restart();
+       }
   
   // Once ESPNow is successfully Init, we will register for recv CB to
   // get recv packer info
@@ -81,5 +103,7 @@ void setup() {
 }
 
 void loop() {
+	
+  // Chill
   
 }
