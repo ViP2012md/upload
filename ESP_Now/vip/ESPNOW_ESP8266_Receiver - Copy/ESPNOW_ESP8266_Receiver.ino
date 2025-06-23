@@ -31,7 +31,6 @@ struct_message myData;
 
 // Callback function that will be executed when data is received
 void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
-  
   memcpy(&myData, incomingData, sizeof(myData));
   digitalWrite(LED_BUILTIN, LOW);  // Turn the LED off by making the voltage HIGH
   Serial.print("Bytes received: ");
@@ -61,7 +60,7 @@ void OnDataRecv(uint8_t * mac, uint8_t *incomingData, uint8_t len) {
  
 void setup() {
   // Initialize Serial Monitor
-  Serial.begin(115200); //
+  Serial.begin(74880);
   Serial.println();
   pinMode(LED_BUILTIN, OUTPUT);  // Initialize the LED_BUILTIN pin as an output
   // Set device as a Wi-Fi Station

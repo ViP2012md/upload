@@ -15,13 +15,18 @@
 // REPLACE WITH RECEIVER MAC Address
 uint8_t broadcastAddress[] = { 0x58, 0xBF, 0x25, 0x4C, 0x0F, 0x80 };  // 58:BF:25:4C:0F:80
 
-#define CHANNEL 1
-#define passkey NULL
-#define passkey_len 0
 
 // Structure example to send data
 // Must match the receiver structure
-
+/*
+typedef struct struct_message {
+  char a[32];
+  int b;
+  float c;
+  String d;
+  bool e;
+} struct_message;
+*/
 typedef struct struct_message {
   uint16_t message_cnt;
   char NSPanel_Name[16];
@@ -40,16 +45,19 @@ struct_message myData;
 unsigned long lastTime = 0;
 unsigned long timerDelay = 5000;  // send readings timer
 uint16_t msg_cnt = 0;
-char char_serial;
 
 // Callback when data is sent
 void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
-  char macStr[18];
-  snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
-           mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
-  Serial.print("Last Packet Sent to: "); Serial.println(macStr);
   Serial.print("Last Packet Send Status: ");
-  Serial.println( sendStatus == 0 ? "Delivery Success" : "Delivery Fail");
+  if (sendStatus == 0) {
+    Serial.println("Delivery success");
+ //   digitalWrite(LED_BUILTIN, LOW);  // Turn the LED on (Note that LOW is the voltage level
+  } else {
+    Serial.println("Delivery fail");
+ //   digitalWrite(LED_BUILTIN, LOW);  // Turn the LED on (Note that LOW is the voltage level
+  }
+//delay(100); 
+//digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED on (Note that LOW is the voltage level
 }
 
 void setup() {
@@ -57,14 +65,11 @@ void setup() {
   Serial.begin(115200); // 74880
   Serial.println();
   pinMode(LED_BUILTIN, OUTPUT);  // Initialize the LED_BUILTIN pin as an output
-  
   // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
+
   // Init ESP-NOW
   Serial.println("ESP-8266 Transmiter initialization...");
-   // This is the mac address of the Master in Station Mode
-  Serial.print("STA MAC: "); Serial.println(WiFi.macAddress());
-  
   if (esp_now_init() != 0) {
     Serial.println("Error initializing ESP-NOW");
     return;
@@ -76,18 +81,11 @@ void setup() {
   esp_now_register_send_cb(OnDataSent);
 
   // Register peer
-  //esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_SLAVE, CHANNEL, passkey, passkey_len);
-  Serial.println( esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_SLAVE, CHANNEL, passkey, passkey_len) == 0 ? "Peer add with succes" : "Failed to add peer");
+  esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
 }
 
 void loop() {
-
-  if (Serial.available()) {        // If anything comes in Serial (USB),
-    char_serial = Serial.read();  // read it and send it out Serial1 (pins 0 & 1)
-	Serial.print("Serial read: ");
-	Serial.println(char_serial);	
-  
-
+ // if ((millis() - lastTime) > timerDelay) {
     // Set values to send
     myData.message_cnt = msg_cnt;
     strcpy(myData.NSPanel_Name, "NSPanel Zone-");
@@ -107,9 +105,6 @@ void loop() {
     digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED on (Note that LOW is the voltage level
     msg_cnt++;
     //lastTime = millis();
-    //delay(5000);
- 
-  }
- 
- 
+    delay(5000);
+ // }
 }
