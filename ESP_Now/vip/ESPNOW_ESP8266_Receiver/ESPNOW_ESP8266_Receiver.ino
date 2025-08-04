@@ -20,16 +20,13 @@
 // Structure example to receive data
 // Must match the sender structure
 typedef struct struct_message {
-  uint16_t message_cnt;
-  char NSPanel_Name[16];
-  uint8_t NSPanel_Zone;
-  char Climate_Mode[4];
-  float Current_temp;
-  float Target_temp_Cool;
-  float Target_temp_Heat;
-  bool Relay_Cool;
-  bool Relay_Heat;
-  char UART_Data;
+  uint8_t NSPanel_ID;		// NSPanel Zone ID
+  char NSPanel_Name[16];	// NSPanel Name
+  char Climate_Mode[4];		// Climate mode // OFF, HEAT, COOL, AUTO
+  char Relay_Cool;			// Relay Cool
+  char Relay_Heat;			// Relay Heat
+  char UART_Data;			// UART Data
+  uint16_t message_cnt;		// Message count
 } struct_message;
 
 // Create a struct_message called myData
