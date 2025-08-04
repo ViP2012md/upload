@@ -22,13 +22,14 @@ uint8_t broadcastAddress[] = { 0x58, 0xBF, 0x25, 0x4C, 0x0F, 0x80 };  // 58:BF:2
 // Structure example to send data
 // Must match the receiver structure
 typedef struct struct_message {
-  uint16_t NSPanel_ID;		// NSPanel Zone ID
+  uint16_t NSPanel_ID;		// NSPanel Zone ID Z1 5A31
   char NSPanel_Name[16];	// NSPanel Name
-//  char Climate_Mode[4];	// Climate mode // OFF, HEAT, COOL, AUTO
-  char Relay_Cool[3];		// Relay Cool
-  char Relay_Heat[3];		// Relay Heat
+  char Relay_Cool;			// Relay Cool
+  char Relay_Heat;			// Relay Heat
   uint16_t message_cnt;		// Message count
 } struct_message;
+//  char Climate_Mode[4];	// Climate mode // OFF, HEAT, COOL, AUTO
+
 
 // Create a struct_message called myData
 struct_message myData;
@@ -114,11 +115,11 @@ void loop() {
 	Serial.println(char_serial);	
     // Set values to send
 
-    strcpy(myData.NSPanel_Name, "NSPanel Zone-");
-    myData.NSPanel_Zone_ID = 6;
+    strcpy(myData.NSPanel_Name, "NSPanel Zone-6");
+    myData.NSPanel_Zone_ID = 0x5A36;
 //    strcpy(myData.Climate_Mode, "Auto");
-    strcpy(myData.Relay_Cool, "ON");
-    strcpy(myData.Relay_Heat, "OFF");
+    myData.Relay_Cool, '0';
+    myData.Relay_Heat, 'Y';
 	myData.message_cnt = msg_cnt;
     sendData();
     msg_cnt++;

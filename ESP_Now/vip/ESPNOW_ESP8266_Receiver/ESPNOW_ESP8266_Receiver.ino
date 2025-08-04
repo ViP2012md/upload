@@ -20,14 +20,14 @@
 // Structure example to receive data
 // Must match the sender structure
 typedef struct struct_message {
-  uint8_t NSPanel_ID;		// NSPanel Zone ID
+  uint16_t NSPanel_ID;		// NSPanel Zone ID Z1 5A31
   char NSPanel_Name[16];	// NSPanel Name
-  char Climate_Mode[4];		// Climate mode // OFF, HEAT, COOL, AUTO
   char Relay_Cool;			// Relay Cool
   char Relay_Heat;			// Relay Heat
-  char UART_Data;			// UART Data
   uint16_t message_cnt;		// Message count
 } struct_message;
+//  char Climate_Mode[4];	// Climate mode // OFF, HEAT, COOL, AUTO
+
 
 // Create a struct_message called myData
 struct_message myData;
@@ -48,21 +48,12 @@ void OnDataRecv(uint8_t * mac_addr, uint8_t *incomingData, uint8_t len) {
    //Serial.print("Char: ");
   Serial.print(myData.NSPanel_Name);
   //Serial.print("Int: ");
+  Serial.print("Zone ID: ");
   Serial.println(myData.NSPanel_Zone);
-  Serial.print("Climate mode: ");
-  Serial.println(myData.Climate_Mode);
-  Serial.print("Current temperature: ");
-  Serial.println(myData.Current_temp);
-  Serial.print("Target Cool temperature: ");
-  Serial.println(myData.Target_temp_Cool);
-  Serial.print("Target Heat temperature: ");
-  Serial.println(myData.Target_temp_Heat);
   Serial.print("Relay Cool: ");
   Serial.println(myData.Relay_Cool);
   Serial.print("Relay Heat: ");
   Serial.println(myData.Relay_Heat);
-  Serial.print("UART Data: ");
-  Serial.println(myData.UART_Data);
   Serial.print("message count: ");
   Serial.println(myData.message_cnt);
   Serial.println();
