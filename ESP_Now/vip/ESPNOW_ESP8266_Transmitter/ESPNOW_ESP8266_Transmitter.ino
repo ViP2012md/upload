@@ -18,6 +18,8 @@ uint8_t broadcastAddress[] = { 0x58, 0xBF, 0x25, 0x4C, 0x0F, 0x80 };  // 58:BF:2
 #define CHANNEL 1
 #define passkey NULL
 #define passkey_len 0
+#define RCool_pin GPIO3
+#define RHeat_pin GPIO1
 
 // Structure example to send data
 // Must match the receiver structure
@@ -71,6 +73,19 @@ void configDeviceAP() {
   }
 } //*/
 
+/******************************************/
+struct Button {
+  const uint8_t PIN;
+  uint32_t numberKeyPresses;
+  bool pressed;
+};
+Button button1 = {D6, 0, false};
+
+void ICACHE_RAM_ATTR isr() {
+  button1.numberKeyPresses++;
+  button1.pressed = true;
+}
+/******************************************/
 
 void setup() {
   // Init Serial Monitor
@@ -83,7 +98,14 @@ void setup() {
   // Init ESP-NOW
   Serial.println("ESP-8266 Transmiter initialization...");
   
-  
+/******************************************/  
+  pinMode(RCool_pin, INPUT_PULLUP);
+  pinMode(RHeat_pin, INPUT_PULLUP);
+  attachInterrupt(RCool_pin, isr, CHANGE);
+  attachInterrupt(RHeat_pin, isr, CHANGE);  
+/******************************************/
+
+
   // configure device AP mode
   //configDeviceAP();  
   
