@@ -11,6 +11,7 @@
 
 #include <ESP8266WiFi.h>
 #include <espnow.h>
+#include <Arduino.h>
 
 // REPLACE WITH RECEIVER MAC Address
 uint8_t broadcastAddress[] = { 0x58, 0xBF, 0x25, 0x4C, 0x0F, 0x80 };  // 58:BF:25:4C:0F:80
@@ -18,8 +19,13 @@ uint8_t broadcastAddress[] = { 0x58, 0xBF, 0x25, 0x4C, 0x0F, 0x80 };  // 58:BF:2
 #define CHANNEL 1
 #define passkey NULL
 #define passkey_len 0
-#define RCool_pin GPIO3
-#define RHeat_pin GPIO1
+#define RCool_pin 0
+#define RHeat_pin 2
+
+#define LINE_BUF_SIZE 128
+
+char lineBuf[LINE_BUF_SIZE];
+size_t idx = 0;
 
 // Structure example to send data
 // Must match the receiver structure
@@ -73,23 +79,26 @@ void configDeviceAP() {
   }
 } //*/
 
-/******************************************/
-struct Button {
-  const uint8_t PIN;
-  uint32_t numberKeyPresses;
-  bool pressed;
-};
-Button button1 = {D6, 0, false};
-
-void ICACHE_RAM_ATTR isr() {
-  button1.numberKeyPresses++;
-  button1.pressed = true;
+void isr_RCool() {
+  Serial.println("GPIO0 changed!");
 }
-/******************************************/
+
+void isr_RHeat() {
+  Serial.println("GPIO2 changed!");
+}
+
+void isrGPIO0() {
+  Serial.println("GPIO0 changed!");
+}
+
+void isrGPIO2() {
+  Serial.println("GPIO2 changed!");
+}
+
 
 void setup() {
   // Init Serial Monitor
-  Serial.begin(115200); // 74880
+  Serial.begin(74880); // 74880 // 115200
   Serial.println();
   pinMode(LED_BUILTIN, OUTPUT);  // Initialize the LED_BUILTIN pin as an output
   
@@ -99,10 +108,14 @@ void setup() {
   Serial.println("ESP-8266 Transmiter initialization...");
   
 /******************************************/  
-  pinMode(RCool_pin, INPUT_PULLUP);
-  pinMode(RHeat_pin, INPUT_PULLUP);
-  attachInterrupt(RCool_pin, isr, CHANGE);
-  attachInterrupt(RHeat_pin, isr, CHANGE);  
+  //pinMode(RCool_pin, INPUT_PULLUP);
+  //pinMode(RHeat_pin, INPUT_PULLUP);
+  pinMode(0, INPUT_PULLUP);
+  //pinMode(2, INPUT_PULLUP);
+
+  attachInterrupt(digitalPinToInterrupt(0), isrGPIO0, CHANGE);
+ // attachInterrupt(digitalPinToInterrupt(2), isrGPIO2, CHANGE);
+
 /******************************************/
 
 
@@ -131,6 +144,57 @@ void setup() {
 
 
 void loop() {
+  // Wait for Enter
+  // Read all available bytes
+  while (Serial.available() > 0) {
+    int ch = Serial.read();
+
+    // End-of-line: Enter can be CR, LF, or CRLF/LFCR
+    if (ch == '\r' || ch == '\n') {
+      // If CR is followed by LF, consume it (and vice versa)
+      if ((ch == '\r' && Serial.peek() == '\n') ||
+          (ch == '\n' && Serial.peek() == '\r')) {
+        Serial.read(); // swallow paired line ending
+      }
+
+      // Terminate string and echo back
+      lineBuf[idx] = '\0';
+      Serial.println();
+      Serial.print("Echo: ");
+      Serial.println(lineBuf);
+
+      // Reset buffer for next line
+      idx = 0;
+      continue;
+    }
+    // Handle backspace (8) or delete (127)
+    if (ch == 8 || ch == 127) {
+      if (idx > 0) {
+        idx--;
+        // Optional terminal-friendly backspace echo:
+        Serial.print("\b \b");
+      }
+      continue;
+    }
+    // Accept printable ASCII
+    if (ch >= 32 && ch <= 126) {
+      if (idx < LINE_BUF_SIZE - 1) {
+        lineBuf[idx++] = (char)ch;
+        // Optional live echo of typed character:
+        Serial.write((char)ch);
+      } else {
+        // Buffer full: you can notify or ignore extra chars
+        // Here we ignore extras until Enter is pressed
+      }
+    }
+  }
+
+  // Keep the watchdog happy during idle waits
+  yield();
+delay(100);
+
+}
+ /* 
   if (Serial.available()) {        // If anything comes in Serial (USB),
     char_serial = Serial.read();  // read it and send it out Serial1 (pins 0 & 1)
 	Serial.print("Serial read: ");
@@ -147,5 +211,9 @@ void loop() {
     msg_cnt++;
     //lastTime = millis();
     //delay(5000);
+	
+	
   }
-}
+*/
+//}
+
