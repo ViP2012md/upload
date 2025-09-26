@@ -16,16 +16,27 @@
 #define CHANNEL 1
 #define passkey NULL
 #define passkey_len 0
+#define LINE_BUF_SIZE 32
 
 // Structure example to receive data
 // Must match the sender structure
 typedef struct struct_message {
-  uint16_t NSPanel_ID;		// NSPanel Zone ID Z1 5A31
-  char NSPanel_Name[16];	// NSPanel Name
-  char Relay_Cool;			// Relay Cool
-  char Relay_Heat;			// Relay Heat
-  uint16_t message_cnt;		// Message count
+  uint16_t NSPanel_ID;		// NSPanel Zone ID Z1 5A31 
+  char NSPanel_Name[LINE_BUF_SIZE];	// NSPanel Name
+  uint16_t sensor_type; // RL - relay (0x524C), TH - temperature & humidity (0x5448), PW - power meter (0x5057).
+  //char Relay_Cool;	// Relay Cool		
+  //char Relay_Heat;	// Relay Heat		
+  uint32_t var1;
+  char units1[2]; // Relay Cool
+  uint32_t var2;
+  char units2[2]; // Relay Heat
+  uint32_t var3;
+  char units3[2]; // NA
+  uint32_t raw1; 
+  uint32_t raw2;
+  uint32_t raw3;  
 } struct_message;
+//  char Climate_Mode[4];	// Climate mode // OFF, HEAT, COOL, AUTO
 //  char Climate_Mode[4];	// Climate mode // OFF, HEAT, COOL, AUTO
 
 
@@ -45,25 +56,34 @@ void OnDataRecv(uint8_t * mac_addr, uint8_t *incomingData, uint8_t len) {
   digitalWrite(LED_BUILTIN, LOW);  // Turn the LED off by making the voltage HIGH
   Serial.print("Bytes received: ");
   Serial.println(len);
-   //Serial.print("Char: ");
+  Serial.print("String: ");
   Serial.print(myData.NSPanel_Name);
-  //Serial.print("Int: ");
-  Serial.print("Zone ID: ");
-  Serial.println(myData.NSPanel_Zone);
-  Serial.print("Relay Cool: ");
-  Serial.println(myData.Relay_Cool);
-  Serial.print("Relay Heat: ");
-  Serial.println(myData.Relay_Heat);
-  Serial.print("message count: ");
-  Serial.println(myData.message_cnt);
   Serial.println();
+  Serial.print("Zone ID: ");
+  Serial.println(myData.NSPanel_ID);
+  if (myData.sensor_type == 0x524C){
+	Serial.println("Sensor type : Relay");
+    Serial.print("Relay Cool: ");
+    Serial.print(myData.units1); Serial.print(" = "); Serial.println(myData.var1);
+    Serial.print("Relay Heat: ");
+    Serial.print(myData.units2); Serial.print(" = "); Serial.println(myData.var2);
+  
+  }
+  
+  
+  Serial.print("Raw 1: ");
+  Serial.println(myData.raw1);
+  Serial.print("Raw 2: ");
+  Serial.println(myData.raw2);
+  Serial.print("Raw 3: ");
+  Serial.println(myData.raw3);
   //delay(100);
   digitalWrite(LED_BUILTIN, HIGH);  // Turn the LED on (Note that LOW is the voltage level
 }
  
 void setup() {
   // Initialize Serial Monitor
-  Serial.begin(115200); //
+  Serial.begin(74880); // 74880 // 115200
   Serial.println();
   pinMode(LED_BUILTIN, OUTPUT);  // Initialize the LED_BUILTIN pin as an output
   WiFi.disconnect();  

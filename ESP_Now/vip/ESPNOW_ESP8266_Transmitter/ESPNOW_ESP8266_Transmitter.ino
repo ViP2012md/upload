@@ -19,22 +19,36 @@ uint8_t broadcastAddress[] = { 0x58, 0xBF, 0x25, 0x4C, 0x0F, 0x80 };  // 58:BF:2
 #define CHANNEL 1
 #define passkey NULL
 #define passkey_len 0
-#define RCool_pin 0
-#define RHeat_pin 2
+#define RCool_pin 3
+#define RHeat_pin 1
 
-#define LINE_BUF_SIZE 128
+#define LINE_BUF_SIZE 32
 
 char lineBuf[LINE_BUF_SIZE];
 size_t idx = 0;
+uint8_t isr_vect=0; 
+unsigned long lastTime = 0;
+unsigned long timerDelay = 5000;  // send readings timer
+uint16_t msg_cnt = 0;
+char char_serial;
 
 // Structure example to send data
 // Must match the receiver structure
 typedef struct struct_message {
-  uint16_t NSPanel_ID;		// NSPanel Zone ID Z1 5A31
-  char NSPanel_Name[16];	// NSPanel Name
-  char Relay_Cool;			// Relay Cool
-  char Relay_Heat;			// Relay Heat
-  uint16_t message_cnt;		// Message count
+  uint16_t NSPanel_ID;		// NSPanel Zone ID Z1 5A31 
+  char NSPanel_Name[LINE_BUF_SIZE];	// NSPanel Name
+  uint16_t sensor_type; // RL - relay (0x524C), TH - temperature & humidity (0x5448), PW - power meter (0x5057).
+  //char Relay_Cool;	// Relay Cool		
+  //char Relay_Heat;	// Relay Heat		
+  uint32_t var1;
+  char units1[2]; // Relay Cool
+  uint32_t var2;
+  char units2[2]; // Relay Heat
+  uint32_t var3;
+  char units3[2]; // NA
+  uint32_t raw1; 
+  uint32_t raw2;
+  uint32_t raw3;  
 } struct_message;
 //  char Climate_Mode[4];	// Climate mode // OFF, HEAT, COOL, AUTO
 
@@ -42,10 +56,6 @@ typedef struct struct_message {
 // Create a struct_message called myData
 struct_message myData;
 
-unsigned long lastTime = 0;
-unsigned long timerDelay = 5000;  // send readings timer
-uint16_t msg_cnt = 0;
-char char_serial;
 
 void sendData() {
     // Send message via ESP-NOW
@@ -60,9 +70,10 @@ void OnDataSent(uint8_t *mac_addr, uint8_t sendStatus) {
   char macStr[18];
   snprintf(macStr, sizeof(macStr), "%02x:%02x:%02x:%02x:%02x:%02x",
            mac_addr[0], mac_addr[1], mac_addr[2], mac_addr[3], mac_addr[4], mac_addr[5]);
-  Serial.print("Last Packet Sent to: "); Serial.println(macStr);
-  Serial.print("Last Packet Send Status: ");
-  Serial.println( sendStatus == 0 ? "Delivery Success" : "Delivery Fail");
+//  Serial.print("Last Packet Sent to: "); Serial.println(macStr);
+//  Serial.print("Last Packet Send Status: ");
+//  Serial.println( sendStatus == 0 ? "Delivery Success" : "Delivery Fail");
+  msg_cnt++;
 }
 
 /* config AP SSID
@@ -79,42 +90,53 @@ void configDeviceAP() {
   }
 } //*/
 
-void isr_RCool() {
-  Serial.println("GPIO0 changed!");
-}
+//variables to keep track of the timing of recent interrupts
+unsigned long button_time = 0;  
+unsigned long last_button_time = 0; 
 
-void isr_RHeat() {
-  Serial.println("GPIO2 changed!");
-}
-
-void isrGPIO0() {
-  Serial.println("GPIO0 changed!");
-}
-
-void isrGPIO2() {
-  Serial.println("GPIO2 changed!");
+void ICACHE_RAM_ATTR isr()  {
+  button_time = millis();
+  if (button_time - last_button_time > 250) {
+     isr_vect=1;
+     last_button_time = button_time;
+  }
 }
 
 
 void setup() {
   // Init Serial Monitor
-  Serial.begin(74880); // 74880 // 115200
-  Serial.println();
+//  Serial.begin(74880); // 74880 // 115200
+//  Serial.println();
   pinMode(LED_BUILTIN, OUTPUT);  // Initialize the LED_BUILTIN pin as an output
   
+  // Set global transmiter values 
+  {
+  myData.NSPanel_ID = 0x5A31;		// NSPanel Zone ID Z1 5A31 
+  strcpy(myData.NSPanel_Name, "NSPanel SmartZone ");	// NSPanel Name
+  myData.sensor_type = 0x524C; // RL - relay (0x524C), TH - temperature & humidity (0x5448), PW - power meter (0x5057).
+  myData.var1;
+  strcpy(myData.units1, "RC"); // Relay Cool
+  myData.var2;
+  strcpy(myData.units2, "RH"); // Relay Heat
+  myData.var3;
+  strcpy(myData.units3, "NA"); // NA
+  myData.raw1;
+  myData.raw2;
+  myData.raw3; 
+  }
   // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
   // Init ESP-NOW
-  Serial.println("ESP-8266 Transmiter initialization...");
+//  Serial.println("ESP-8266 Transmiter initialization...");
   
 /******************************************/  
   //pinMode(RCool_pin, INPUT_PULLUP);
   //pinMode(RHeat_pin, INPUT_PULLUP);
-  pinMode(0, INPUT_PULLUP);
-  //pinMode(2, INPUT_PULLUP);
+  pinMode(RCool_pin, INPUT_PULLUP);
+  pinMode(RHeat_pin, INPUT_PULLUP);
 
-  attachInterrupt(digitalPinToInterrupt(0), isrGPIO0, CHANGE);
- // attachInterrupt(digitalPinToInterrupt(2), isrGPIO2, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(RCool_pin), isr, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(RHeat_pin), isr, CHANGE);
 
 /******************************************/
 
@@ -123,10 +145,10 @@ void setup() {
   //configDeviceAP();  
   
    // This is the mac address of the Master in Station Mode
-  Serial.print("AP MAC: "); Serial.println(WiFi.macAddress());
-  if (esp_now_init() == ERR_OK) { Serial.println("ESP-Now Init Success");  }
+//  Serial.print("AP MAC: "); Serial.println(WiFi.macAddress());
+  if (esp_now_init() == ERR_OK) {}//{ Serial.println("ESP-Now Init Success");  }
   else {
-    Serial.println("Error initializing ESP-NOW");
+//    Serial.println("Error initializing ESP-NOW");
     // Retry InitESPNow, add a counte and then restart?
     // InitESPNow();
     // or Simply Restart
@@ -139,13 +161,22 @@ void setup() {
 
   // Register peer
   //esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_SLAVE, CHANNEL, passkey, passkey_len);
-  Serial.println(esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_SLAVE, CHANNEL, passkey, passkey_len) == 0 ? "Peer add with succes" : "Failed to add peer");
+//  Serial.println(esp_now_add_peer(broadcastAddress, ESP_NOW_ROLE_SLAVE, CHANNEL, passkey, passkey_len) == 0 ? "Peer add with succes" : "Failed to add peer");
 }
 
 
 void loop() {
+  if (isr_vect == 1){
+  isr_vect =0;
+   myData.var1 = (digitalRead(RCool_pin) == HIGH ? 'Y' : '0' );
+   myData.var2 = (digitalRead(RHeat_pin) == HIGH ? 'Y' : '0' );
+//   myData.message_cnt = msg_cnt;
+   sendData();
+   delay(50);
+ }
   // Wait for Enter
   // Read all available bytes
+  /*
   while (Serial.available() > 0) {
     int ch = Serial.read();
 
@@ -159,10 +190,19 @@ void loop() {
 
       // Terminate string and echo back
       lineBuf[idx] = '\0';
+      myData.NSPanel_Name[idx] =  '\0'; 
+    //myData.NSPanel_Name = lineBuf;
+                             
+    myData.Relay_Cool = (digitalRead(RCool_pin) == HIGH ? 'Y' : '0' );
+    myData.Relay_Heat = (digitalRead(RHeat_pin) == HIGH ? 'Y' : '0' );
+	  myData.message_cnt = msg_cnt;
+    sendData();
+    //msg_cnt++;
+    //lastTime = millis();
+    //delay(5000);
       Serial.println();
       Serial.print("Echo: ");
       Serial.println(lineBuf);
-
       // Reset buffer for next line
       idx = 0;
       continue;
@@ -179,7 +219,9 @@ void loop() {
     // Accept printable ASCII
     if (ch >= 32 && ch <= 126) {
       if (idx < LINE_BUF_SIZE - 1) {
-        lineBuf[idx++] = (char)ch;
+        lineBuf[idx] = (char)ch;
+        myData.NSPanel_Name[idx] =  (char)ch;
+        idx++;
         // Optional live echo of typed character:
         Serial.write((char)ch);
       } else {
@@ -188,32 +230,9 @@ void loop() {
       }
     }
   }
+ 
 
   // Keep the watchdog happy during idle waits
-  yield();
+  yield();  //*/
 delay(100);
-
 }
- /* 
-  if (Serial.available()) {        // If anything comes in Serial (USB),
-    char_serial = Serial.read();  // read it and send it out Serial1 (pins 0 & 1)
-	Serial.print("Serial read: ");
-	Serial.println(char_serial);	
-    // Set values to send
-
-    strcpy(myData.NSPanel_Name, "NSPanel Zone-6");
-    myData.NSPanel_Zone_ID = 0x5A36;
-//    strcpy(myData.Climate_Mode, "Auto");
-    myData.Relay_Cool, '0';
-    myData.Relay_Heat, 'Y';
-	myData.message_cnt = msg_cnt;
-    sendData();
-    msg_cnt++;
-    //lastTime = millis();
-    //delay(5000);
-	
-	
-  }
-*/
-//}
-
