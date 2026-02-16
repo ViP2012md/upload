@@ -60,17 +60,19 @@ void OnDataRecv(uint8_t * mac_addr, uint8_t *incomingData, uint8_t len) {
   Serial.print(myData.NSPanel_Name);
   Serial.println();
   Serial.print("Zone ID: ");
-  Serial.println(myData.NSPanel_ID);
+  uint32_t ZID_int = myData.NSPanel_ID&0xFF00;
+  ZID_int = ZID_int >>8; 
+  char ZID_1 = ZID_int;
+  char ZID_0 = myData.NSPanel_ID&0xFF;
+  Serial.print(myData.NSPanel_ID, HEX); Serial.print(" / "); Serial.print(ZID_1);Serial.println(ZID_0);
+
   if (myData.sensor_type == 0x524C){
 	Serial.println("Sensor type : Relay");
     Serial.print("Relay Cool: ");
-    Serial.print(myData.units1); Serial.print(" = "); Serial.println(myData.var1);
+    Serial.print(myData.units1); Serial.print(" = "); Serial.println(myData.var1,HEX);
     Serial.print("Relay Heat: ");
-    Serial.print(myData.units2); Serial.print(" = "); Serial.println(myData.var2);
-  
+    Serial.print(myData.units2); Serial.print(" = "); Serial.println(myData.var2,HEX);
   }
-  
-  
   Serial.print("Raw 1: ");
   Serial.println(myData.raw1);
   Serial.print("Raw 2: ");
@@ -89,12 +91,10 @@ void setup() {
   WiFi.disconnect();  
   // Set device as a Wi-Fi Station
   WiFi.mode(WIFI_STA);
-
   // Init ESP-NOW
   Serial.println("ESP-8266 Raceiver initialization...");
   // This is the mac address of the Master in Station Mode
   Serial.print("STA MAC: "); Serial.println(WiFi.macAddress());
-  
   if (esp_now_init() == ERR_OK) { Serial.println("ESP-Now Init Success"); }
   else {
     Serial.println("Error initializing ESP-NOW");
@@ -103,7 +103,6 @@ void setup() {
     // or Simply Restart
     ESP.restart();
        }
-  
   // Once ESPNow is successfully Init, we will register for recv CB to
   // get recv packer info
   esp_now_set_self_role(ESP_NOW_ROLE_SLAVE);
@@ -111,7 +110,5 @@ void setup() {
 }
 
 void loop() {
-	
-  // Chill
-  
+  // Chill  
 }

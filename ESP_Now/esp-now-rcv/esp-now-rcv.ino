@@ -48,7 +48,7 @@ void setup() {
   }
    
   // Register callback function
-  esp_now_register_recv_cb(OnDataRecv);
+  esp_now_register_recv_cb(esp_now_recv_cb_t(OnDataRecv));
 }
  
 void loop() {
