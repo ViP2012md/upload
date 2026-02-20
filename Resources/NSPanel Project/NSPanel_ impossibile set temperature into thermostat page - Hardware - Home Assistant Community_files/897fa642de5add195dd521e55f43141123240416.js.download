@@ -1,3 +1,0 @@
-"require"in window&&require("discourse/lib/theme-settings-store").registerSettings(19,{theme_uploads:{"chevron-up":"//community-assets.home-assistant.io/original/3X/b/9/b9f551fd0435c2ca0792c56928703df89fd2e23c.svg"}}),$(document).ready((function(e){e((function(){e(window).scroll((function(){e(this).scrollTop()>100?e(".move-up").fadeIn():e(".move-up").fadeOut()})),e(".move-up button").click((function(){return e("body,html").animate({scrollTop:0},800),!1}))}))}))
-
-//# sourceMappingURL=897fa642de5add195dd521e55f43141123240416.map?__ws=community.home-assistant.io

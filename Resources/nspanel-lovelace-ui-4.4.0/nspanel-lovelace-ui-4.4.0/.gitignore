@@ -1,9 +1,0 @@
-__pycache__/
-# don't add nextion2text
-HMI/Nextion2Text.py
-
-# dont add panels.yaml
-panels.yaml
-
-# don't add Webstorm project stuff
-.idea
